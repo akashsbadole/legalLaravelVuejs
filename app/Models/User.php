@@ -16,7 +16,7 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'role', 'phone', 'address', 'hourly_rate', 'is_active'];
+    protected $fillable = ['name', 'email', 'password', 'role', 'phone', 'address', 'hourly_rate', 'is_active', 'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_enabled'];
 
     protected function casts(): array
     {
@@ -25,6 +25,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'hourly_rate' => 'decimal:2',
+            'two_factor_enabled' => 'boolean',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted',
         ];
     }
 
@@ -69,5 +72,43 @@ class User extends Authenticatable
             return true;
         }
         return $case->participants()->where('user_id', $this->id)->exists();
+    }
+
+    public function enableTwoFactorAuthentication(): void
+    {
+        $secret = \PragmaRX\Google2FA\Google2FA::generateSecretKey();
+        $this->update([
+            'two_factor_secret' => $secret,
+            'two_factor_enabled' => true,
+            'two_factor_recovery_codes' => json_encode($this->generateRecoveryCodes()),
+        ]);
+    }
+
+    public function disableTwoFactorAuthentication(): void
+    {
+        $this->update([
+            'two_factor_secret' => null,
+            'two_factor_enabled' => false,
+            'two_factor_recovery_codes' => null,
+        ]);
+    }
+
+    public function getTwoFactorQrCodeUrl(): string
+    {
+        $google2fa = new \PragmaRX\Google2FA\Google2FA();
+        return $google2fa->getQRCodeUrl(
+            config('app.name'),
+            $this->email,
+            $this->two_factor_secret
+        );
+    }
+
+    private function generateRecoveryCodes(): array
+    {
+        $codes = [];
+        for ($i = 0; $i < 8; $i++) {
+            $codes[] = strtoupper(\Illuminate\Support\Str::random(8));
+        }
+        return $codes;
     }
 }

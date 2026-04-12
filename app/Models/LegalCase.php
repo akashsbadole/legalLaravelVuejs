@@ -14,7 +14,7 @@ class LegalCase extends Model
     
     protected $fillable = [
         'case_number', 'title', 'description', 'case_type', 'status_id',
-        'assigned_attorney_id', 'open_date', 'expected_close_date',
+        'assigned_attorney_id', 'client_id', 'open_date', 'expected_close_date',
         'actual_close_date', 'estimated_value', 'notes'
     ];
 
@@ -45,27 +45,37 @@ class LegalCase extends Model
 
     public function notes(): HasMany
     {
-        return $this->hasMany(CaseNote::class);
+        return $this->hasMany(CaseNote::class, 'case_id');
     }
 
     public function documents(): HasMany
     {
-        return $this->hasMany(Document::class);
+        return $this->hasMany(Document::class, 'case_id');
     }
 
     public function timeEntries(): HasMany
     {
-        return $this->hasMany(TimeEntry::class);
+        return $this->hasMany(TimeEntry::class, 'case_id');
     }
 
     public function expenses(): HasMany
     {
-        return $this->hasMany(Expense::class);
+        return $this->hasMany(Expense::class, 'case_id');
     }
 
     public function invoices(): HasMany
     {
-        return $this->hasMany(Invoice::class);
+        return $this->hasMany(Invoice::class, 'case_id');
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(CaseTask::class, 'case_id');
+    }
+
+    public function timelineEvents(): HasMany
+    {
+        return $this->hasMany(CaseTimelineEvent::class, 'case_id')->orderBy('event_date', 'asc');
     }
 
     public static function generateCaseNumber(): string
@@ -89,5 +99,21 @@ class LegalCase extends Model
     public function getTotalBilledAttribute(): float
     {
         return $this->invoices()->sum('total_amount');
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'client_id');
+    }
+
+    public function getClientUserAttribute(): ?User
+    {
+        return $this->participants()->wherePivot('role', 'client')->first();
+    }
+
+    public function getClientNameAttribute(): ?string
+    {
+        $client = $this->getClientUserAttribute();
+        return $client?->name;
     }
 }

@@ -1,162 +1,99 @@
-@extends('layouts.app')
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Case: ') . $case->case_number }}
+        </h2>
+    </x-slot>
 
-@section('title', 'Case Details')
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $case->title }}</h1>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{{ route('cases.timeline', $case) }}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition">Timeline</a>
+                    <a href="{{ route('cases.edit', $case) }}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition">Edit</a>
+                    <form method="POST" action="{{ route('cases.destroy', $case) }}">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" onclick="return confirm('Delete this case?')" class="px-4 py-2 rounded-xl bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600 transition">Delete</button>
+                    </form>
+                </div>
+            </div>
 
-@section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2>{{ $case->case_number }}</h2>
-        <h4>{{ $case->title }}</h4>
-    </div>
-    <div>
-        <a href="{{ route('cases.edit', $case) }}" class="btn btn-secondary">Edit</a>
-        <form method="POST" action="{{ route('cases.destroy', $case) }}" class="d-inline">
-            @csrf @method('DELETE')
-            <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this case?')">Delete</button>
-        </form>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header">Case Information</div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Status:</strong> <span class="badge" style="background-color: {{ $case->status->color ?? '#6c757d' }}">{{ $case->status->name ?? 'N/A' }}</span></p>
-                        <p><strong>Type:</strong> {{ $case->case_type ?? 'N/A' }}</p>
-                        <p><strong>Assigned Attorney:</strong> {{ $case->assignedAttorney->name ?? 'N/A' }}</p>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Case Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
+                                <p class="text-gray-900 dark:text-white font-medium">{{ $case->status->name ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Type</p>
+                                <p class="text-gray-900 dark:text-white">{{ $case->case_type ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Attorney</p>
+                                <p class="text-gray-900 dark:text-white">{{ $case->assignedAttorney->name ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Open Date</p>
+                                <p class="text-gray-900 dark:text-white">{{ $case->open_date?->format('M d, Y') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Expected Close</p>
+                                <p class="text-gray-900 dark:text-white">{{ $case->expected_close_date?->format('M d, Y') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Estimated Value</p>
+                                <p class="text-gray-900 dark:text-white">{{ $case->estimated_value ? '$' . number_format($case->estimated_value, 2) : 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Description</p>
+                            <p class="text-gray-900 dark:text-white">{{ $case->description ?? 'No description' }}</p>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <p><strong>Open Date:</strong> {{ $case->open_date?->format('M d, Y') }}</p>
-                        <p><strong>Expected Close:</strong> {{ $case->expected_close_date?->format('M d, Y') }}</p>
-                        <p><strong>Estimated Value:</strong> {{ $case->estimated_value ? '$' . number_format($case->estimated_value, 2) : 'N/A' }}</p>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Notes</h3>
+                        </div>
+                        <div class="p-6">
+                            @forelse(($case->notes ?? collect())->sortByDesc('created_at') as $note)
+                            <div class="border-b border-gray-100 dark:border-gray-700 pb-3 mb-3 last:border-0 last:pb-0 last:mb-0">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $note->user->name ?? 'Unknown' }}</span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ $note->created_at?->format('M d, Y H:i') }}</span>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">{{ $note->content }}</p>
+                            </div>
+                            @empty
+                            <p class="text-gray-500 dark:text-gray-400">No notes yet.</p>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
-                <p><strong>Description:</strong> {{ $case->description ?? 'No description' }}</p>
-            </div>
-        </div>
 
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between">
-                <span>Notes</span>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">Add Note</button>
-            </div>
-            <div class="card-body">
-                @forelse($case->notes->sortByDesc('created_at') as $note)
-                    <div class="border-bottom pb-2 mb-2">
-                        <small class="text-muted">{{ $note->user->name ?? 'Unknown' }} - {{ $note->created_at->format('M d, Y H:i') }}</small>
-                        <p class="mb-1">{{ $note->content }}</p>
-                    </div>
-                @empty
-                    <p class="text-muted">No notes yet.</p>
-                @endforelse
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between">
-                <span>Documents</span>
-                <a href="{{ route('documents.generate') }}?case={{ $case->id }}" class="btn btn-sm btn-primary">Generate</a>
-            </div>
-            <div class="card-body">
-                @forelse($case->documents as $doc)
-                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                        <span>{{ $doc->name }}</span>
-                        <a href="{{ route('documents.download', $doc) }}" class="btn btn-sm btn-outline-secondary">Download</a>
-                    </div>
-                @empty
-                    <p class="text-muted">No documents.</p>
-                @endforelse
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-header">Participants</div>
-            <div class="card-body">
-                @forelse($case->participants as $participant)
-                    <div class="d-flex justify-content-between border-bottom py-2">
-                        <span>{{ $participant->user->name ?? 'Unknown' }}</span>
-                        <small class="text-muted">{{ $participant->role }}</small>
-                    </div>
-                @empty
-                    <p class="text-muted">No participants.</p>
-                @endforelse
-                <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#addParticipantModal">Add</button>
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-header">Financial Summary</div>
-            <div class="card-body">
-                <p><strong>Total Hours:</strong> {{ number_format($case->total_hours, 2) }}</p>
-                <p><strong>Total Expenses:</strong> ${{ number_format($case->total_expenses, 2) }}</p>
-                <p><strong>Total Billed:</strong> ${{ number_format($case->total_billed, 2) }}</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="addNoteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form method="POST" action="{{ route('cases.notes.store', $case) }}" class="modal-content">
-            @csrf
-            <div class="modal-header">
-                <h5 class="modal-title">Add Note</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Content</label>
-                    <textarea name="content" class="form-control" rows="3" required></textarea>
-                </div>
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input type="checkbox" name="is_internal" class="form-check-input" value="0" id="internalCheck">
-                        <label class="form-check-label" for="internalCheck">Internal only</label>
+                <div class="space-y-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Info</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">Client</span>
+                                <span class="text-sm text-gray-900 dark:text-gray-100">{{ $case->client_name ?? 'N/A' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">Created</span>
+                                <span class="text-sm text-gray-900 dark:text-gray-100">{{ $case->created_at->format('M d, Y') }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
-
-<div class="modal fade" id="addParticipantModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form method="POST" action="{{ route('cases.participants.store', $case) }}" class="modal-content">
-            @csrf
-            <div class="modal-header">
-                <h5 class="modal-title">Add Participant</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">User</label>
-                    <select name="user_id" class="form-select" required>
-                        <option value="">Select User</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Role</label>
-                    <select name="role" class="form-select" required>
-                        <option value="client">Client</option>
-                        <option value="opposing_counsel">Opposing Counsel</option>
-                        <option value="judge">Judge</option>
-                        <option value="witness">Witness</option>
-                        <option value="expert">Expert</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-        </form>
-    </div>
-</div>
-@endsection
+</x-app-layout>

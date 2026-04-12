@@ -1,33 +1,39 @@
-@extends('layouts.app')
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Document Templates') }}
+        </h2>
+    </x-slot>
 
-@section('title', 'Document Templates')
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="mb-4 flex justify-between items-center">
+                <div class="text-sm text-gray-600 dark:text-gray-400">Manage your document templates</div>
+                <a href="{{ route('documents.templates.create') }}" class="px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600">
+                    + New Template
+                </a>
+            </div>
 
-@section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Document Templates</h2>
-    <a href="{{ route('documents.templates.create') }}" class="btn btn-primary">New Template</a>
-</div>
-
-<div class="row">
-    @forelse($templates as $template)
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5>{{ $template->name }}</h5>
-                    <p class="text-muted">{{ $template->description }}</p>
-                    <small class="text-muted">Category: {{ $template->category->name ?? 'None' }}</small><br>
-                    <small class="text-muted">Version: {{ $template->version }}</small>
-                    <div class="mt-3">
-                        <a href="{{ route('documents.templates.preview', $template) }}" class="btn btn-sm btn-outline-primary">Preview</a>
-                        <a href="{{ route('documents.templates.edit', $template) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @forelse($templates as $template)
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5 hover:shadow-md transition">
+                    <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ $template->name }}</h5>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ Str::limit($template->description, 60) }}</p>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                        <span class="mr-3">Category: {{ $template->category->name ?? 'None' }}</span>
+                        <span>Version: {{ $template->version }}</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <a href="{{ route('documents.templates.preview', $template) }}" class="px-3 py-1 text-sm border border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400 rounded hover:bg-primary-50 dark:hover:bg-primary-900">Preview</a>
+                        <a href="{{ route('documents.templates.edit', $template) }}" class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-50 dark:hover:bg-gray-700">Edit</a>
                     </div>
                 </div>
+                @empty
+                <div class="col-12 text-center py-8">
+                    <p class="text-gray-500 dark:text-gray-400">No templates yet.</p>
+                </div>
+                @endforelse
             </div>
         </div>
-    @empty
-        <div class="col-12 text-center">
-            <p class="text-muted">No templates yet.</p>
-        </div>
-    @endforelse
-</div>
-@endsection
+    </div>
+</x-app-layout>

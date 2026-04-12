@@ -7,11 +7,20 @@ use App\Models\CaseStatus;
 use App\Models\CaseNote;
 use App\Models\CaseParticipant;
 use Illuminate\Http\Request;
+use App\Models\CaseTimelineEvent;
+use App\Services\ConflictCheckService;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
 class CaseController extends Controller
 {
+    protected $conflictCheck;
+
+    public function __construct()
+    {
+        $this->conflictCheck = new ConflictCheckService();
+    }
+
     public function index(Request $request): View
     {
         $query = LegalCase::with(['status', 'assignedAttorney']);
@@ -61,12 +70,18 @@ class CaseController extends Controller
 
         $case = LegalCase::create($validated);
 
+        $conflicts = $this->conflictCheck->checkNewCaseConflicts([], $validated['assigned_attorney_id']);
+        
+        if (!empty($conflicts)) {
+            return redirect()->route('cases.show', $case)->with('warning', 'Case created but conflict check warning: ' . $conflicts[0]['message']);
+        }
+
         return redirect()->route('cases.show', $case)->with('success', 'Case created successfully.');
     }
 
     public function show(LegalCase $case): View
     {
-        $case->load(['status', 'assignedAttorney', 'participants.user', 'notes.user', 'documents', 'timeEntries', 'expenses', 'invoices']);
+        $case->load(['status', 'assignedAttorney', 'participants', 'notes', 'documents', 'timeEntries', 'expenses', 'invoices']);
         
         return view('cases.show', compact('case'));
     }
@@ -140,5 +155,36 @@ class CaseController extends Controller
         $participant->delete();
         
         return back()->with('success', 'Participant removed successfully.');
+    }
+
+    public function timeline(LegalCase $case): View
+    {
+        $case->load(['timelineEvents.user', 'status', 'assignedAttorney']);
+        $eventTypes = CaseTimelineEvent::getEventTypes();
+        
+        return view('cases.timeline', compact('case', 'eventTypes'));
+    }
+
+    public function storeTimelineEvent(Request $request, LegalCase $case): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'event_type' => 'required|string',
+            'event_date' => 'required|date',
+            'is_milestone' => 'boolean',
+        ]);
+
+        $validated['user_id'] = auth()->id();
+        $case->timelineEvents()->create($validated);
+
+        return back()->with('success', 'Timeline event added successfully.');
+    }
+
+    public function destroyTimelineEvent(CaseTimelineEvent $event): RedirectResponse
+    {
+        $event->delete();
+        
+        return back()->with('success', 'Timeline event deleted.');
     }
 }

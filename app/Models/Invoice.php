@@ -29,7 +29,7 @@ class Invoice extends Model
 
     public function case(): BelongsTo
     {
-        return $this->belongsTo(LegalCase::class);
+        return $this->belongsTo(LegalCase::class, 'case_id');
     }
 
     public function client(): BelongsTo
@@ -44,7 +44,7 @@ class Invoice extends Model
 
     public function lineItems(): HasMany
     {
-        return $this->hasMany(InvoiceLineItem::class);
+        return $this->hasMany(InvoiceLineItem::class, 'invoice_id');
     }
 
     public static function generateInvoiceNumber(): string

@@ -20,16 +20,16 @@ class Expense extends Model
 
     public function case(): BelongsTo
     {
-        return $this->belongsTo(LegalCase::class);
+        return $this->belongsTo(LegalCase::class, 'case_id');
     }
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(ExpenseCategory::class);
+        return $this->belongsTo(ExpenseCategory::class, 'category_id');
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
