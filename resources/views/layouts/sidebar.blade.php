@@ -1,4 +1,4 @@
-<div class="fixed inset-y-0 left-0 w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+<div class="fixed inset-y-0 left-0 z-20 w-64 lg:w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col" :class="{ 'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen }">
     @php use Illuminate\Support\Facades\Auth; @endphp
     <div class="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
         <a href="{{ route('dashboard') }}" class="flex items-center space-x-2">
@@ -34,6 +34,9 @@
             </a>
             <a href="{{ route('calendar.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg {{ request()->routeIs('calendar.*') ? 'bg-primary-50 dark:bg-primary-900 text-primary-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100' }}">
                 <span>Calendar</span>
+            </a>
+            <a href="{{ route('crm.dashboard') }}" class="flex items-center px-3 py-2 text-sm rounded-lg {{ request()->routeIs('crm.*') ? 'bg-primary-50 dark:bg-primary-900 text-primary-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100' }}">
+                <span>CRM</span>
             </a>
             <a href="{{ route('reports.index') }}" class="flex items-center px-3 py-2 text-sm rounded-lg {{ request()->routeIs('reports.*') ? 'bg-primary-50 dark:bg-primary-900 text-primary-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100' }}">
                 <span>Reports</span>

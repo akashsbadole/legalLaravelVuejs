@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('search', [App\Http\Controllers\SearchController::class, 'index'])->name('search');
 
+    Route::get('crm', [App\Http\Controllers\CrmController::class, 'dashboard'])->name('crm.dashboard');
+
     Route::resource('cases', CaseController::class);
 
     Route::post('cases/{case}/notes', [CaseController::class, 'addNote'])->name('cases.notes.store');
@@ -121,6 +123,8 @@ Route::middleware('auth')->group(function () {
         Route::post('tenants/{tenant}/activate', [App\Http\Controllers\TenantController::class, 'activate'])->name('tenants.activate');
         Route::post('tenants/{tenant}/extend', [App\Http\Controllers\TenantController::class, 'extendSubscription'])->name('tenants.extend');
         
+        Route::resource('settings', App\Http\Controllers\Admin\SettingsController::class)->except(['show']);
+        
         Route::get('audit-logs', [App\Http\Controllers\AuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('audit-logs/{auditLog}', [App\Http\Controllers\AuditLogController::class, 'show'])->name('audit-logs.show');
         Route::get('audit-logs/export', [App\Http\Controllers\AuditLogController::class, 'export'])->name('audit-logs.export');
@@ -133,5 +137,12 @@ Route::middleware('auth')->group(function () {
     Route::get('reports/attorney-performance', [App\Http\Controllers\ReportController::class, 'attorneyPerformance'])->name('reports.attorney-performance');
     Route::get('reports/export', [App\Http\Controllers\ReportController::class, 'export'])->name('reports.export');
 });
+
+Route::get('/test-admin', function () {
+    if (auth()->check() && auth()->user()->role === 'admin') {
+        return 'Admin access granted! Go to <a href="/admin/settings">/admin/settings</a>';
+    }
+    return 'Not admin or not logged in.';
+})->middleware('auth');
 
 require __DIR__.'/auth.php';

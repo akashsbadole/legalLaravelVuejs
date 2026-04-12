@@ -51,6 +51,11 @@ class User extends Authenticatable
         return $this->hasMany(Expense::class);
     }
 
+    public function leads(): HasMany
+    {
+        return $this->hasMany(Lead::class);
+    }
+
     public function invoicesAsClient(): HasMany
     {
         return $this->hasMany(Invoice::class, 'client_id');

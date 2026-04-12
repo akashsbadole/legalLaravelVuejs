@@ -127,7 +127,7 @@
                                 <th class="py-2 text-center text-sm font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-16">Time</th>
                                 @foreach($calendarData['weekDays'] as $day)
                                 @php $isToday = $day->format('Y-m-d') === $today->format('Y-m-d'); @endphp
-                                <th class="py-2 text-center text-sm font-semibold border-b border-gray-200 dark:border-gray-700 {{ $isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400' }}">{{ $day->format('D<br>M j') }}</th>
+                                <th class="py-2 text-center text-sm font-semibold border-b border-gray-200 dark:border-gray-700 {{ $isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400' }}">{{ $day->format('D M j') }}</th>
                                 @endforeach
                             </tr>
                         </thead>
