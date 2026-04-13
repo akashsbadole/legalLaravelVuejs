@@ -7,6 +7,7 @@ use App\Models\LegalCase;
 use App\Models\User;
 use App\Models\TaskComment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
@@ -14,7 +15,7 @@ class TaskController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = CaseTask::with(['case', 'assignedTo', 'createdBy']);
+        $query = CaseTask::with(['case', 'client', 'assignedTo', 'createdBy']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -37,14 +38,16 @@ class TaskController extends Controller
     public function create(): View
     {
         $cases = LegalCase::with('assignedAttorney')->get();
+        $clients = User::where('role', 'client')->get();
         $users = User::whereIn('role', ['admin', 'attorney', 'paralegal'])->get();
-        return view('tasks.create', compact('cases', 'users'));
+        return view('tasks.create', compact('cases', 'clients', 'users'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'case_id' => 'required|exists:cases,id',
+            'case_id' => 'nullable|exists:cases,id',
+            'client_id' => 'nullable|exists:users,id',
             'assigned_to' => 'nullable|exists:users,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -52,7 +55,7 @@ class TaskController extends Controller
             'priority' => 'required|in:low,medium,high,urgent',
         ]);
 
-        $validated['created_by'] = auth()->id();
+        $validated['created_by'] = Auth::id();
         $validated['status'] = 'pending';
 
         CaseTask::create($validated);
@@ -62,15 +65,16 @@ class TaskController extends Controller
 
     public function show(CaseTask $task): View
     {
-        $task->load(['case', 'assignedTo', 'createdBy', 'comments.user']);
+        $task->load(['case', 'client', 'assignedTo', 'createdBy', 'comments.user']);
         return view('tasks.show', compact('task'));
     }
 
     public function edit(CaseTask $task): View
     {
         $cases = LegalCase::with('assignedAttorney')->get();
+        $clients = User::where('role', 'client')->get();
         $users = User::whereIn('role', ['admin', 'attorney', 'paralegal'])->get();
-        return view('tasks.edit', compact('task', 'cases', 'users'));
+        return view('tasks.edit', compact('task', 'cases', 'clients', 'users'));
     }
 
     public function update(Request $request, CaseTask $task): RedirectResponse
@@ -110,7 +114,7 @@ class TaskController extends Controller
     public function myTasks(): View
     {
         $tasks = CaseTask::with(['case'])
-            ->where('assigned_to', auth()->id())
+            ->where('assigned_to', Auth::id())
             ->orderBy('due_date')
             ->paginate(15);
 
@@ -130,7 +134,7 @@ class TaskController extends Controller
         ]);
 
         $task->comments()->create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'content' => $validated['content'],
         ]);
 

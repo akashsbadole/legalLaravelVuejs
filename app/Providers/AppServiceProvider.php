@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\Client;
+use App\Models\LegalCase;
+use App\Observers\ClientObserver;
+use App\Observers\CaseObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Client::observe(ClientObserver::class);
+        LegalCase::observe(CaseObserver::class);
     }
 }

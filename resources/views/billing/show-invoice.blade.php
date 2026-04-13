@@ -40,6 +40,18 @@
                             <p class="text-sm text-gray-500 dark:text-gray-400">Paid Date</p>
                             <p class="text-gray-900 dark:text-white">{{ $invoice->paid_date?->format('M d, Y') ?? 'N/A' }}</p>
                         </div>
+                        @if($invoice->gstin)
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Client GSTIN</p>
+                            <p class="text-gray-900 dark:text-white">{{ $invoice->gstin }}</p>
+                        </div>
+                        @endif
+                        @if($invoice->sac_code)
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">SAC Code</p>
+                            <p class="text-gray-900 dark:text-white">{{ $invoice->sac_code }}</p>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -65,8 +77,8 @@
                                 <td class="px-4 py-3 text-gray-900 dark:text-gray-100">{{ $item->description }}</td>
                                 <td class="px-4 py-3 text-gray-900 dark:text-gray-100">{{ $item->type }}</td>
                                 <td class="px-4 py-3 text-gray-900 dark:text-gray-100">{{ $item->quantity }}</td>
-                                <td class="px-4 py-3 text-gray-900 dark:text-gray-100">${{ number_format($item->unit_price, 2) }}</td>
-                                <td class="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium">${{ number_format($item->amount, 2) }}</td>
+                                <td class="px-4 py-3 text-gray-900 dark:text-gray-100">₹{{ number_format($item->unit_price, 2) }}</td>
+                                <td class="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium">₹{{ number_format($item->amount, 2) }}</td>
                             </tr>
                             @empty
                             <tr><td colspan="5" class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">No line items.</td></tr>
@@ -75,23 +87,41 @@
                         <tfoot class="text-gray-900 dark:text-white">
                             <tr>
                                 <td colspan="4" class="px-4 py-3 text-right font-medium">Subtotal</td>
-                                <td class="px-4 py-3">${{ number_format($invoice->subtotal, 2) }}</td>
+                                <td class="px-4 py-3">₹{{ number_format($invoice->subtotal, 2) }}</td>
                             </tr>
-                            @if($invoice->tax_amount > 0)
+                            @if($invoice->cgst_amount > 0)
                             <tr>
-                                <td colspan="4" class="px-4 py-2 text-right">Tax</td>
-                                <td class="px-4 py-2">${{ number_format($invoice->tax_amount, 2) }}</td>
+                                <td colspan="4" class="px-4 py-2 text-right">CGST (9%)</td>
+                                <td class="px-4 py-2">₹{{ number_format($invoice->cgst_amount, 2) }}</td>
+                            </tr>
+                            @endif
+                            @if($invoice->sgst_amount > 0)
+                            <tr>
+                                <td colspan="4" class="px-4 py-2 text-right">SGST (9%)</td>
+                                <td class="px-4 py-2">₹{{ number_format($invoice->sgst_amount, 2) }}</td>
+                            </tr>
+                            @endif
+                            @if($invoice->igst_amount > 0)
+                            <tr>
+                                <td colspan="4" class="px-4 py-2 text-right">IGST (18%)</td>
+                                <td class="px-4 py-2">₹{{ number_format($invoice->igst_amount, 2) }}</td>
+                            </tr>
+                            @endif
+                            @if($invoice->tax_amount > 0 && !$invoice->cgst_amount && !$invoice->sgst_amount && !$invoice->igst_amount)
+                            <tr>
+                                <td colspan="4" class="px-4 py-2 text-right">GST (18%)</td>
+                                <td class="px-4 py-2">₹{{ number_format($invoice->tax_amount, 2) }}</td>
                             </tr>
                             @endif
                             @if($invoice->discount_amount > 0)
                             <tr>
                                 <td colspan="4" class="px-4 py-2 text-right">Discount</td>
-                                <td class="px-4 py-2">-${{ number_format($invoice->discount_amount, 2) }}</td>
+                                <td class="px-4 py-2">₹{{ number_format($invoice->discount_amount, 2) }}</td>
                             </tr>
                             @endif
                             <tr class="border-t-2 border-gray-200 dark:border-gray-600">
                                 <td colspan="4" class="px-4 py-3 text-right font-bold text-lg">Total</td>
-                                <td class="px-4 py-3 font-bold text-lg">${{ number_format($invoice->total_amount, 2) }}</td>
+                                <td class="px-4 py-3 font-bold text-lg">₹{{ number_format($invoice->total_amount, 2) }}</td>
                             </tr>
                         </tfoot>
                     </table>

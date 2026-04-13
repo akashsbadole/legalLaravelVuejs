@@ -15,7 +15,8 @@ class LegalCase extends Model
     protected $fillable = [
         'case_number', 'title', 'description', 'case_type', 'status_id',
         'assigned_attorney_id', 'client_id', 'open_date', 'expected_close_date',
-        'actual_close_date', 'estimated_value', 'notes'
+        'actual_close_date', 'estimated_value', 'notes', 'hourly_rate',
+        'assigned_staff', 'assignment_changed_at', 'assignment_changed_by'
     ];
 
     protected function casts(): array
@@ -25,6 +26,8 @@ class LegalCase extends Model
             'expected_close_date' => 'date',
             'actual_close_date' => 'date',
             'estimated_value' => 'decimal:2',
+            'assigned_staff' => 'array',
+            'assignment_changed_at' => 'datetime',
         ];
     }
 
@@ -36,6 +39,16 @@ class LegalCase extends Model
     public function assignedAttorney(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_attorney_id');
+    }
+
+    public function assignedStaff()
+    {
+        return User::whereIn('id', $this->assigned_staff ?? [])->get();
+    }
+
+    public function assignmentChangedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assignment_changed_by');
     }
 
     public function participants(): BelongsToMany
@@ -76,6 +89,11 @@ class LegalCase extends Model
     public function timelineEvents(): HasMany
     {
         return $this->hasMany(CaseTimelineEvent::class, 'case_id')->orderBy('event_date', 'asc');
+    }
+
+    public function followUps(): HasMany
+    {
+        return $this->hasMany(CaseFollowUp::class, 'case_id');
     }
 
     public static function generateCaseNumber(): string

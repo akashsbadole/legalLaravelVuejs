@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\GSTService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,8 +12,11 @@ class Invoice extends Model
     protected $fillable = [
         'invoice_number', 'case_id', 'client_id', 'created_by', 'subtotal',
         'tax_amount', 'discount_amount', 'total_amount', 'status',
-        'issue_date', 'due_date', 'paid_date', 'notes'
+        'issue_date', 'due_date', 'paid_date', 'notes', 'gstin', 'sac_code',
+        'cgst_amount', 'sgst_amount', 'igst_amount'
     ];
+
+    protected $appends = ['cgst', 'sgst', 'igst'];
 
     protected function casts(): array
     {
@@ -24,6 +28,11 @@ class Invoice extends Model
             'issue_date' => 'date',
             'due_date' => 'date',
             'paid_date' => 'date',
+            'gstin' => 'string',
+            'sac_code' => 'string',
+            'cgst_amount' => 'decimal:2',
+            'sgst_amount' => 'decimal:2',
+            'igst_amount' => 'decimal:2',
         ];
     }
 
@@ -59,5 +68,38 @@ class Invoice extends Model
     public function getIsOverdueAttribute(): bool
     {
         return $this->status === 'sent' && now()->gt($this->due_date);
+    }
+
+    /**
+     * Calculate GST amounts based on subtotal
+     */
+    public function calculateGST()
+    {
+        $gstService = new GSTService();
+        return $gstService->calculateGST($this->subtotal);
+    }
+
+    /**
+     * Get CGST amount
+     */
+    public function getCgstAttribute()
+    {
+        return $this->cgst_amount ?? 0;
+    }
+
+    /**
+     * Get SGST amount
+     */
+    public function getSgstAttribute()
+    {
+        return $this->sgst_amount ?? 0;
+    }
+
+    /**
+     * Get IGST amount
+     */
+    public function getIgstAttribute()
+    {
+        return $this->igst_amount ?? 0;
     }
 }

@@ -11,10 +11,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(\App\Http\Middleware\SetLocale::class);
+        $middleware->web(\App\Http\Middleware\CheckAdminOnboarding::class);
+        $middleware->web(\App\Http\Middleware\SecurityHeadersMiddleware::class);
+        $middleware->web(\App\Http\Middleware\ForceHttpsMiddleware::class);
+        $middleware->api(prepend: [
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'two-factor' => \App\Http\Middleware\TwoFactorMiddleware::class,
+            'auth:sanctum' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->withProviders([
+        \App\Providers\LoggingServiceProvider::class,
+    ])
+    ->create();

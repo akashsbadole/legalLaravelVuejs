@@ -237,4 +237,57 @@ class ReportController extends Controller
             ->header('Content-Type', 'text/csv')
             ->header('Content-Disposition', "attachment; filename={$filename}");
     }
+
+    public function clientAnalytics(): View
+    {
+        $clients = User::where('role', 'client')
+            ->with(['cases', 'invoices'])
+            ->get()
+            ->map(function ($client) {
+                return [
+                    'id' => $client->id,
+                    'name' => $client->name,
+                    'email' => $client->email,
+                    'total_cases' => $client->cases->count(),
+                    'active_cases' => $client->cases->where('status_id', '!=', 4)->count(),
+                    'total_invoiced' => $client->invoices->sum('total_amount'),
+                    'total_paid' => $client->invoices->sum('amount_paid'),
+                    'outstanding_balance' => $client->invoices->whereIn('status', ['sent', 'viewed'])->sum(function($invoice) {
+                        return $invoice->total_amount - $invoice->amount_paid;
+                    }),
+                    'ltv' => $client->invoices->sum('amount_paid'),
+                    'last_case_date' => $client->cases->max('created_at'),
+                ];
+            });
+
+        $totalClients = $clients->count();
+        $totalLTV = $clients->sum('ltv');
+        $avgLTV = $totalClients > 0 ? $totalLTV / $totalClients : 0;
+        $highValueClients = $clients->where('ltv', '>', $avgLTV)->count();
+
+        return view('reports.client-analytics', compact('clients', 'totalClients', 'totalLTV', 'avgLTV', 'highValueClients'));
+    }
+
+    public function clientActivity(): View
+    {
+        $clients = User::where('role', 'client')
+            ->with(['interactionLogs' => function($query) {
+                $query->latest()->take(10);
+            }])
+            ->get()
+            ->map(function ($client) {
+                $interactions = $client->interactionLogs;
+                return [
+                    'id' => $client->id,
+                    'name' => $client->name,
+                    'email' => $client->email,
+                    'total_interactions' => $interactions->count(),
+                    'last_interaction' => $interactions->first()?->created_at,
+                    'interaction_types' => $interactions->pluck('type')->unique()->values(),
+                    'recent_activity' => $interactions->take(5),
+                ];
+            });
+
+        return view('reports.client-activity', compact('clients'));
+    }
 }

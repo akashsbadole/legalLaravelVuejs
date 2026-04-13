@@ -28,6 +28,7 @@ class User extends Authenticatable
             'two_factor_enabled' => 'boolean',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted',
+            'password_changed_at' => 'datetime',
         ];
     }
 
@@ -53,12 +54,42 @@ class User extends Authenticatable
 
     public function leads(): HasMany
     {
-        return $this->hasMany(Lead::class);
+        return $this->hasMany(Lead::class, 'assigned_to');
     }
 
     public function invoicesAsClient(): HasMany
     {
         return $this->hasMany(Invoice::class, 'client_id');
+    }
+
+    public function consents(): HasMany
+    {
+        return $this->hasMany(Consent::class);
+    }
+
+    public function interactionLogs(): HasMany
+    {
+        return $this->hasMany(InteractionLog::class);
+    }
+
+    public function followUps(): HasMany
+    {
+        return $this->hasMany(FollowUp::class);
+    }
+
+    public function onboardings(): HasMany
+    {
+        return $this->hasMany(Onboarding::class);
+    }
+
+    public function surveyResponses(): HasMany
+    {
+        return $this->hasMany(SurveyResponse::class);
+    }
+
+    public function roleModel()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
     }
 
     public function isAttorney(): bool

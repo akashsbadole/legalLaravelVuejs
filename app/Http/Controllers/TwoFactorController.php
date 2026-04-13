@@ -84,12 +84,57 @@ class TwoFactorController extends Controller
         $code = $request->code;
         $secret = $user->two_factor_secret;
 
+        // Check if it's a TOTP code
         if ($google2fa->verifyKey($secret, $code)) {
             session(['two_factor_verified' => true]);
             return redirect()->intended(route('dashboard'));
         }
 
-        return back()->with('error', 'Invalid verification code.');
+        // Check if it's a recovery code
+        if ($this->verifyRecoveryCode($user, $code)) {
+            // Regenerate recovery codes after use
+            $user->two_factor_recovery_codes = json_encode($this->generateRecoveryCodes());
+            $user->save();
+
+            session(['two_factor_verified' => true]);
+            return redirect()->intended(route('dashboard'))->with('warning', 'Recovery code used. Please generate new recovery codes.');
+        }
+
+        return back()->with('error', 'Invalid verification code or recovery code.');
+    }
+
+    public function regenerateRecoveryCodes(): RedirectResponse
+    {
+        $user = auth()->user();
+
+        if (!$user->two_factor_enabled) {
+            return redirect()->route('profile.edit')->with('error', 'Two-factor authentication must be enabled first.');
+        }
+
+        $user->two_factor_recovery_codes = json_encode($this->generateRecoveryCodes());
+        $user->save();
+
+        return back()->with('success', 'Recovery codes regenerated successfully.');
+    }
+
+    private function verifyRecoveryCode(User $user, string $code): bool
+    {
+        $recoveryCodes = json_decode($user->two_factor_recovery_codes ?? '[]', true);
+
+        if (empty($recoveryCodes)) {
+            return false;
+        }
+
+        // Find and remove the used code
+        $index = array_search($code, $recoveryCodes);
+        if ($index !== false) {
+            unset($recoveryCodes[$index]);
+            $user->two_factor_recovery_codes = json_encode(array_values($recoveryCodes));
+            $user->save();
+            return true;
+        }
+
+        return false;
     }
 
     private function generateRecoveryCodes(): array

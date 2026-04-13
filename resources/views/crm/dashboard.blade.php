@@ -63,7 +63,28 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="font-semibold text-gray-900 dark:text-white">Recent Interactions</h3>
+                    </div>
+                    <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @forelse($recentInteractions as $interaction)
+                        <div class="px-5 py-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-gray-900 dark:text-white">{{ $interaction->user->name }}</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ ucfirst($interaction->type) }} - {{ $interaction->direction }}</p>
+                                </div>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">{{ $interaction->sent_at->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">No interactions yet</div>
+                        @endforelse
+                    </div>
+                </div>
+
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
                         <h3 class="font-semibold text-gray-900 dark:text-white">Pipeline Overview</h3>

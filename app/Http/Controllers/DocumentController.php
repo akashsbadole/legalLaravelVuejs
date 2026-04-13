@@ -7,6 +7,7 @@ use App\Models\DocumentTemplate;
 use App\Models\DocumentCategory;
 use App\Models\LegalCase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
@@ -53,7 +54,7 @@ class DocumentController extends Controller
             'content' => 'required|string',
         ]);
 
-        $validated['created_by'] = auth()->id();
+        $validated['created_by'] = Auth::id();
         $validated['version'] = 1;
         $validated['is_active'] = true;
 
@@ -152,7 +153,7 @@ class DocumentController extends Controller
             'name' => $template->name . '_' . $caseIdPart . '_' . now()->format('YmdHis'),
             'case_id' => $validated['case_id'] ?? null,
             'template_id' => $template->id,
-            'created_by' => auth()->id(),
+            'created_by' => Auth::id(),
             'file_path' => 'documents/' . now()->format('Y/m/d') . '/' . uniqid() . '.html',
             'file_type' => 'html',
             'content' => $content,
@@ -161,6 +162,22 @@ class DocumentController extends Controller
         ]);
 
         Storage::disk('public')->put($document->file_path, $content);
+
+        // Notify clients if document is associated with a case
+        if ($validated['case_id']) {
+            $case = LegalCase::find($validated['case_id']);
+            if ($case) {
+                // Notify all client participants in the case
+                $clientParticipants = $case->participants()->wherePivot('role', 'client')->get();
+                foreach ($clientParticipants as $participant) {
+                    \App\Models\AppNotification::notifyNewDocument(
+                        $participant->user_id,
+                        $document->name,
+                        $case->case_number
+                    );
+                }
+            }
+        }
 
         return redirect()->route('documents.show', $document)->with('success', 'Document generated successfully.');
     }
@@ -173,17 +190,25 @@ class DocumentController extends Controller
 
     public function download(Document $document)
     {
-        if (!Storage::disk('public')->exists($document->file_path)) {
+        if (!Storage::disk('s3')->exists($document->file_path)) {
             return back()->with('error', 'File not found.');
         }
 
-        return Storage::disk('public')->download($document->file_path, $document->name . '.' . $document->file_type);
+        $url = Storage::disk('s3')->temporaryUrl(
+            $document->file_path,
+            now()->addMinutes(5),
+            [
+                'ResponseContentDisposition' => 'attachment; filename="' . $document->name . '.' . $document->file_type . '"'
+            ]
+        );
+
+        return redirect($url);
     }
 
     public function destroy(Document $document): RedirectResponse
     {
-        if (Storage::disk('public')->exists($document->file_path)) {
-            Storage::disk('public')->delete($document->file_path);
+        if (Storage::disk('s3')->exists($document->file_path)) {
+            Storage::disk('s3')->delete($document->file_path);
         }
 
         $document->delete();
@@ -196,15 +221,49 @@ class DocumentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'case_id' => 'nullable|exists:cases,id',
-            'file' => 'required|file|mimes:pdf,doc,docx,txt,html',
+            'file' => [
+                'required',
+                'file',
+                'mimes:pdf,doc,docx,txt,html',
+                'max:51200', // 50MB max
+                function ($attribute, $value, $fail) {
+                    // Additional security checks
+                    if ($value) {
+                        $fileName = $value->getClientOriginalName();
+
+                        // Check for suspicious file names
+                        if (preg_match('/[<>\"\|\?\*\:]/', $fileName)) {
+                            $fail('Invalid file name. File names cannot contain special characters.');
+                            return;
+                        }
+
+                        // Check file content for potential security issues
+                        $content = file_get_contents($value->getRealPath());
+
+                        // Check for embedded scripts in text files
+                        if (in_array($value->getClientOriginalExtension(), ['txt', 'html'])) {
+                            if (preg_match('/<script|javascript:|vbscript:|onload=|onerror=/i', $content)) {
+                                $fail('File contains potentially malicious content.');
+                                return;
+                            }
+                        }
+
+                        // Check for PHP code in any file
+                        if (preg_match('/<\?php|\beval\s*\(|\bexec\s*\(|\bsystem\s*\(/i', $content)) {
+                            $fail('File contains potentially malicious content.');
+                            return;
+                        }
+                    }
+                },
+            ],
         ]);
 
-        $path = $request->file('file')->store('documents/' . now()->format('Y/m/d'), 'public');
+        $path = $request->file('file')->store('documents/' . now()->format('Y/m/d'), 's3');
 
         Document::create([
             'name' => $validated['name'],
             'case_id' => $validated['case_id'] ?? null,
-            'created_by' => auth()->id(),
+            'created_by' => Auth::id(),
             'file_path' => $path,
             'file_type' => $request->file('file')->getClientOriginalExtension(),
             'is_generated' => false,

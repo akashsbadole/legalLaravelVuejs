@@ -42,6 +42,7 @@
                             <tr>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-400">Task</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-400">Case</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-400">Client</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-400">Assigned To</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-400">Due Date</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-400">Priority</th>
@@ -66,6 +67,7 @@
                                     <span class="text-gray-400">—</span>
                                     @endif
                                 </td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $task->client?->name ?? '—' }}</td>
                                 <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $task->assignedTo?->name ?? 'Unassigned' }}</td>
                                 <td class="px-4 py-3">
                                     <span class="{{ $task->isOverdue() ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-400' }}">

@@ -109,7 +109,15 @@
                             @if($lead->status !== 'won' && $lead->status !== 'lost')
                             <form method="POST" action="{{ route('leads.convert', $lead) }}">
                                 @csrf
-                                <input type="text" name="case_title" placeholder="Case title" class="w-full mb-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm">
+                                <input type="text" name="case_title" placeholder="Case title" class="w-full mb-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm" required>
+                                @if($lead->email)
+                                <div class="mb-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="create_client" value="1" class="mr-2" checked>
+                                        <span class="text-sm text-gray-700 dark:text-gray-300">Create client profile</span>
+                                    </label>
+                                </div>
+                                @endif
                                 <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Convert to Case</button>
                             </form>
                             @endif

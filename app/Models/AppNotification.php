@@ -78,4 +78,15 @@ class AppNotification extends Model
             "/portal/cases/{$caseId}"
         );
     }
+
+    public static function notifyNewDocument(int $userId, string $documentName, string $caseNumber): void
+    {
+        self::createForUser(
+            $userId,
+            'new_document',
+            "New Document Available: {$documentName}",
+            "A new document {$documentName} has been added to case {$caseNumber}.",
+            "/portal/documents"
+        );
+    }
 }

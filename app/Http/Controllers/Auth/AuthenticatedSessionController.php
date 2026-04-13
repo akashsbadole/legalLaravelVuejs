@@ -28,6 +28,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = Auth::user();
+
+        if ($user->two_factor_enabled) {
+            return redirect()->route('two-factor.verify');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Lead;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
 
 class LeadController extends Controller
 {
@@ -59,7 +61,7 @@ class LeadController extends Controller
         $lead = Lead::create($validated);
 
         $lead->activities()->create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'activity_type' => 'created',
             'notes' => 'Lead created',
         ]);
@@ -100,7 +102,7 @@ class LeadController extends Controller
 
         if ($oldStatus !== $validated['status']) {
             $lead->activities()->create([
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'activity_type' => 'status_changed',
                 'notes' => "Status changed from {$oldStatus} to {$validated['status']}",
             ]);
@@ -123,7 +125,7 @@ class LeadController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $validated['user_id'] = auth()->id();
+        $validated['user_id'] = Auth::id();
         $lead->activities()->create($validated);
 
         return back()->with('success', 'Activity added successfully.');
@@ -131,27 +133,59 @@ class LeadController extends Controller
 
     public function convertToCase(Request $request, Lead $lead): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'case_title' => 'required|string|max:255',
+            'create_client' => 'boolean',
         ]);
+
+        // Create client user if email provided
+        $clientUser = null;
+        if ($validated['create_client'] && $lead->email) {
+            $clientUser = \App\Models\User::firstOrCreate(
+                ['email' => $lead->email],
+                [
+                    'name' => $lead->name,
+                    'password' => bcrypt(Str::random(12)), // Temporary password
+                    'role' => 'client',
+                ]
+            );
+
+            // Create client profile
+            \App\Models\Client::create([
+                'first_name' => explode(' ', $lead->name)[0] ?? $lead->name,
+                'last_name' => explode(' ', $lead->name)[1] ?? '',
+                'email' => $lead->email,
+                'phone' => $lead->phone,
+                'client_type' => $lead->company ? 'corporate' : 'individual',
+                'company_name' => $lead->company,
+                'status' => 'active',
+                'address_line1' => 'To be updated',
+                'city' => 'To be updated',
+                'state' => 'To be updated',
+                'postal_code' => '000000',
+            ]);
+        }
 
         $case = \App\Models\LegalCase::create([
             'case_number' => \App\Models\LegalCase::generateCaseNumber(),
-            'title' => $request->case_title,
+            'title' => $validated['case_title'],
             'description' => $lead->description,
             'status_id' => 1,
             'assigned_attorney_id' => $lead->assigned_to,
+            'client_id' => $clientUser?->id,
             'open_date' => now()->toDateString(),
         ]);
 
-        $case->participants()->attach($lead->assigned_to, ['role' => 'client']);
+        if ($clientUser) {
+            $case->participants()->attach($clientUser->id, ['role' => 'client']);
+        }
 
         $lead->update(['status' => 'won']);
-        
+
         $lead->activities()->create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'activity_type' => 'converted',
-            'notes' => "Converted to case: {$case->case_number}",
+            'notes' => "Converted to case: {$case->case_number}" . ($clientUser ? " and client profile created" : ""),
         ]);
 
         return redirect()->route('cases.show', $case)->with('success', 'Lead converted to case successfully.');

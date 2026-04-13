@@ -174,6 +174,30 @@ class EmailService
                 'variables' => ['name', 'email', 'password'],
                 'is_default' => true,
             ],
+            [
+                'name' => 'Client Welcome',
+                'slug' => 'client_welcome',
+                'subject' => 'Welcome to Our Legal Services - {{client_name}}',
+                'body' => '<h2>Welcome {{client_name}}!</h2><p>Thank you for choosing our legal services.</p><p>You can access your client portal here: <a href="{{portal_url}}">{{portal_url}}</a></p><p>Next steps: Please upload your documents and complete KYC verification.</p>',
+                'category' => 'onboarding',
+                'variables' => ['client_name', 'portal_url'],
+            ],
+            [
+                'name' => 'Document Request',
+                'slug' => 'document_request',
+                'subject' => 'Document Checklist - {{client_name}}',
+                'body' => '<h2>Hello {{client_name}},</h2><p>To proceed with your case, please upload the following documents:</p><ul><li>Aadhaar Card</li><li>PAN Card</li><li>Address Proof</li><li>{{required_documents}}</li></ul><p>You can upload these in your client portal.</p>',
+                'category' => 'onboarding',
+                'variables' => ['client_name', 'required_documents'],
+            ],
+            [
+                'name' => 'Case Feedback Survey',
+                'slug' => 'case_feedback',
+                'subject' => 'Share Your Feedback - Case {{case_number}}',
+                'body' => '<h2>Hello {{client_name}},</h2><p>Thank you for choosing our legal services for case {{case_number}}.</p><p>We value your feedback! Please take a moment to complete our short survey: <a href="{{survey_url}}">{{survey_url}}</a></p><p>Your input helps us improve our services.</p>',
+                'category' => 'feedback',
+                'variables' => ['client_name', 'case_number', 'survey_url'],
+            ],
         ];
     }
 }

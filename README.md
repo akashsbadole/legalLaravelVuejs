@@ -1,58 +1,152 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# LegalLaravel CRM
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A comprehensive legal practice management system built with Laravel, featuring case management, client portal, billing, document handling, and AI-powered productivity tools.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Case Management**: Complete case lifecycle management with timeline tracking
+- **Client Portal**: Secure client access to cases, documents, and invoices
+- **Billing & Invoicing**: Automated invoicing with time tracking and expense management
+- **Document Management**: Secure document upload, storage, and sharing
+- **CRM Integration**: Lead management, communication tracking, and client relationships
+- **Role-Based Access**: Attorney, paralegal, and client role management
+- **Two-Factor Authentication**: Enhanced security with TOTP and backup codes
+- **API Support**: RESTful API for mobile applications
+- **Multi-Language**: Hindi and English language support
+- **Cloud Storage**: AWS S3 integration for scalable file storage
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Quick Start
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Local Development
 
-## Learning Laravel
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/legallaravel.git
+   cd legallaravel
+   ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+2. **Install dependencies**
+   ```bash
+   composer install
+   npm install
+   ```
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+3. **Environment setup**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+4. **Database setup**
+   ```bash
+   php artisan migrate
+   php artisan db:seed
+   ```
 
-## Agentic Development
+5. **Build assets**
+   ```bash
+   npm run build
+   ```
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+6. **Start development server**
+   ```bash
+   php artisan serve
+   ```
+
+### Production Deployment
+
+For detailed production deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+#### Quick Docker Deployment
 
 ```bash
-composer require laravel/boost --dev
+# Clone and configure
+git clone https://github.com/yourusername/legallaravel.git
+cd legallaravel
+cp .env.example .env
 
-php artisan boost:install
+# Edit .env with production values
+nano .env
+
+# Deploy with Docker
+docker-compose up -d --build
+
+# Run migrations
+docker-compose exec app php artisan migrate --force
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Environment Variables
+
+See `.env.example` for all required environment variables. Key configurations:
+
+- **Database**: MySQL/PostgreSQL with Redis for caching
+- **Mail**: Mailgun/SMTP for email delivery
+- **Storage**: AWS S3 for file storage
+- **SMS**: Msg91/Twilio for SMS notifications
+- **Security**: Force HTTPS, security headers
+
+## API Documentation
+
+The application provides a RESTful API for mobile applications:
+
+- **Base URL**: `/api/v1`
+- **Authentication**: Laravel Sanctum tokens
+- **Endpoints**: Cases, invoices, documents, users
+
+## Security Features
+
+- CSRF protection on all forms
+- XSS prevention with Content Security Policy
+- SQL injection protection via Eloquent ORM
+- Secure file upload validation
+- Two-factor authentication
+- Role-based access control
+- Encrypted sensitive data storage
+
+## Performance
+
+- Redis caching for sessions and data
+- Database query optimization with eager loading
+- Image optimization and compression
+- CDN-ready asset compilation
+- Queue processing for background jobs
+
+## Monitoring
+
+- Laravel Telescope for debugging
+- Automated database backups
+- Health check endpoints
+- Error tracking with Sentry
+- Uptime monitoring
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support and questions:
+- Documentation: [DEPLOYMENT.md](DEPLOYMENT.md)
+- Issues: GitHub Issues
+- Email: support@legallaravel.com
+
+## Roadmap
+
+- [ ] AI-powered case analysis
+- [ ] Advanced reporting dashboards
+- [ ] Mobile application
+- [ ] Calendar integration
+- [ ] Video conferencing
+- [ ] E-signature integration
+
+---
+
+Built with ❤️ using Laravel 11

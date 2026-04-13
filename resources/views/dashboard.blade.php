@@ -10,7 +10,7 @@
             <a href="{{ route('cases.index') }}" class="group bg-white dark:bg-gray-800 rounded-2xl p-5 lg:p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Cases</p>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('messages.dashboard.total_cases') }}</p>
                         <p class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mt-2">{{ \App\Models\LegalCase::count() }}</p>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
                             <span class="text-green-600 dark:text-green-400">{{ \App\Models\LegalCase::whereHas('status', fn($q) => $q->where('name', 'Open'))->count() }}</span> open

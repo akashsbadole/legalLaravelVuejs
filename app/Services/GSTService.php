@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Http;
+
 class GSTService
 {
     const GST_RATE = 18; // 18% GST for legal services
@@ -53,7 +55,7 @@ class GSTService
     public function generateGSTInvoiceData(array $lineItems, ?string $clientGstin = null): array
     {
         $subtotal = array_sum(array_column($lineItems, 'amount'));
-        
+
         if ($clientGstin) {
             $taxData = $this->calculateIGST($subtotal);
         } else {
@@ -72,5 +74,25 @@ class GSTService
             'sac_code' => $taxData['sac_code'],
             'is_inter_state' => !empty($clientGstin),
         ];
+    }
+
+    public function submitEInvoice(array $invoiceData): array
+    {
+        // Placeholder for GSTN e-invoicing API
+        // For firms > ₹20 crore turnover
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . config('services.gst.api_key'),
+                'Content-Type' => 'application/json',
+            ])->post('https://api.gst.gov.in/einvoice', $invoiceData);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            return ['error' => 'E-invoice submission failed'];
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
     }
 }

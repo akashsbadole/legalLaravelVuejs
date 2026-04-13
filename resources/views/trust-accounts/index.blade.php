@@ -7,14 +7,14 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @php
-            $totalBalance = \App\Models\TrustAccount::select('client_id')
-                ->groupBy('client_id')
-                ->selectRaw('SUM(CASE WHEN is_debit = 0 THEN amount ELSE -amount END) as balance')
-                ->get()->sum('balance');
-            $totalDeposits = \App\Models\TrustAccount::where('transaction_type', 'deposit')->sum('amount');
-            $totalWithdrawals = \App\Models\TrustAccount::whereIn('transaction_type', ['withdrawal', 'transfer_to_operating'])->sum('amount');
-            @endphp
+@php
+$totalBalance = \App\Models\TrustAccount::select('client_id')
+    ->groupBy('client_id')
+    ->selectRaw('SUM(CASE WHEN transaction_type IN (\'deposit\', \'adjustment\') THEN amount ELSE -amount END) as balance')
+    ->get()->sum('balance');
+$totalDeposits = \App\Models\TrustAccount::where('transaction_type', 'deposit')->sum('amount');
+$totalWithdrawals = \App\Models\TrustAccount::whereIn('transaction_type', ['withdrawal', 'transfer_to_operating'])->sum('amount');
+@endphp
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">

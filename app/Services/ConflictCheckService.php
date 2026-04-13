@@ -98,4 +98,43 @@ class ConflictCheckService
         
         return $conflicts;
     }
+
+    public function checkClientConflicts(int $clientId, int $attorneyId): array
+    {
+        $conflicts = [];
+
+        // Check if client is already represented by this attorney in active cases
+        $activeCases = LegalCase::where('client_id', $clientId)
+            ->where('assigned_attorney_id', $attorneyId)
+            ->whereHas('status', function ($q) {
+                $q->where('name', '!=', 'closed');
+            })
+            ->count();
+
+        if ($activeCases > 0) {
+            $conflicts[] = [
+                'type' => 'existing_representation',
+                'message' => "This client is already represented by the assigned attorney in active cases.",
+                'severity' => 'medium'
+            ];
+        }
+
+        // Check if attorney represents opposing parties in client's other cases
+        $clientCases = LegalCase::where('client_id', $clientId)->pluck('id');
+        $conflictingCases = LegalCase::where('assigned_attorney_id', $attorneyId)
+            ->whereHas('participants', function ($q) use ($clientId) {
+                $q->where('user_id', $clientId)->where('role', 'opposing_party');
+            })
+            ->count();
+
+        if ($conflictingCases > 0) {
+            $conflicts[] = [
+                'type' => 'opposing_party_conflict',
+                'message' => "The assigned attorney has represented parties opposing this client in other cases.",
+                'severity' => 'high'
+            ];
+        }
+
+        return $conflicts;
+    }
 }

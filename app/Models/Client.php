@@ -57,7 +57,14 @@ class Client extends Model
         'whatsapp_notifications' => 'boolean',
         'marketing_consent' => 'boolean',
         'data_processing_consent' => 'boolean',
-        'kyc_verified_by' => 'integer'
+        'kyc_verified_by' => 'integer',
+        'aadhaar_number' => 'encrypted',
+        'pan_number' => 'encrypted',
+        'gstin' => 'encrypted',
+        'phone' => 'encrypted',
+        'alternate_phone' => 'encrypted',
+        'address_line1' => 'encrypted',
+        'address_line2' => 'encrypted',
     ];
 
     // Relationships
@@ -103,6 +110,11 @@ class Client extends Model
         return $this->morphMany(Notification::class, 'notifiable');
     }
 
+    public function getUserAttribute(): ?User
+    {
+        return User::where('email', $this->email)->first();
+    }
+
     // Helper methods
     public function getFullNameAttribute()
     {
@@ -137,6 +149,11 @@ class Client extends Model
     public function getTotalPaidAmountAttribute()
     {
         return $this->invoices()->sum('amount_paid');
+    }
+
+    public function getLtvAttribute()
+    {
+        return $this->getTotalPaidAmountAttribute();
     }
 
     // Scope methods for filtering

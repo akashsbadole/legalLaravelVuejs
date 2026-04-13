@@ -1,0 +1,50 @@
+<?php
+
+return [
+    'nav' => [
+        'dashboard' => 'Dashboard',
+        'cases' => 'Cases',
+        'tasks' => 'Tasks',
+        'documents' => 'Documents',
+        'billing' => 'Billing',
+        'reports' => 'Reports',
+        'crm' => 'CRM',
+        'leads' => 'Leads',
+        'settings' => 'Settings',
+        'profile' => 'Profile',
+        'logout' => 'Logout',
+    ],
+    'common' => [
+        'save' => 'Save',
+        'cancel' => 'Cancel',
+        'edit' => 'Edit',
+        'delete' => 'Delete',
+        'create' => 'Create',
+        'view' => 'View',
+        'search' => 'Search',
+        'loading' => 'Loading...',
+        'no_data' => 'No data available',
+    ],
+    'dashboard' => [
+        'welcome' => 'Welcome to LegalFirm',
+        'total_cases' => 'Total Cases',
+        'active_cases' => 'Active Cases',
+        'pending_tasks' => 'Pending Tasks',
+        'recent_activity' => 'Recent Activity',
+    ],
+    'cases' => [
+        'case_number' => 'Case Number',
+        'title' => 'Title',
+        'status' => 'Status',
+        'client' => 'Client',
+        'attorney' => 'Attorney',
+        'created_date' => 'Created Date',
+        'actions' => 'Actions',
+    ],
+    'crm' => [
+        'clients' => 'Clients',
+        'interactions' => 'Interactions',
+        'follow_ups' => 'Follow-ups',
+        'client_profile' => 'Client Profile',
+    ],
+];

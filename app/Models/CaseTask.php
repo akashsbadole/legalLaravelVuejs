@@ -10,7 +10,7 @@ class CaseTask extends Model
 {
     protected $table = 'case_tasks';
     
-    protected $fillable = ['case_id', 'assigned_to', 'created_by', 'title', 'description', 'due_date', 'status', 'priority'];
+    protected $fillable = ['case_id', 'client_id', 'assigned_to', 'created_by', 'title', 'description', 'due_date', 'status', 'priority'];
 
     protected function casts(): array
     {
@@ -22,6 +22,11 @@ class CaseTask extends Model
     public function case(): BelongsTo
     {
         return $this->belongsTo(LegalCase::class, 'case_id');
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'client_id');
     }
 
     public function assignedTo(): BelongsTo
