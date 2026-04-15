@@ -144,7 +144,18 @@ const loading = ref(true);
 const showModal = ref(false);
 const editingCase = ref(null);
 const statuses = ref([]);
-const caseTypes = ref(['Civil', 'Criminal', 'Family', 'Corporate', 'Intellectual Property', 'Real Estate', 'Immigration', 'Other']);
+const caseTypes = ref([]);
+
+const loadCaseTypes = async () => {
+  try {
+    const response = await axios.get('/api/case-types');
+    caseTypes.value = response.data.types || [];
+  } catch (error) {
+    console.error('Failed to load case types:', error);
+    caseTypes.value = ['Civil', 'Criminal', 'Family', 'Corporate', 'Intellectual Property', 'Real Estate', 'Immigration', 'Other'];
+  }
+};
+loadCaseTypes();
 
 const filters = ref({
     search: '',

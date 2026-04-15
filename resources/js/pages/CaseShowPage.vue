@@ -212,10 +212,15 @@ onMounted(async () => {
         const tasksRes = await axios.get(`tasks?case_id=${route.params.id}`);
         caseTasks.value = tasksRes.data;
         
-        timeline.value = [
-            { id: 1, description: `Case "${caseItem.value.title}" created`, created_at: caseItem.value.created_at },
-            { id: 2, description: 'Case assigned to attorney', created_at: caseItem.value.updated_at }
-        ];
+        try {
+            const timelineRes = await axios.get(`/api/cases/${route.params.id}/timeline`);
+            timeline.value = timelineRes.data.timeline || [];
+        } catch (e) {
+            timeline.value = [
+                { id: 1, description: `Case "${caseItem.value.title}" created`, created_at: caseItem.value.created_at },
+                { id: 2, description: 'Case assigned to attorney', created_at: caseItem.value.updated_at }
+            ];
+        }
     } catch (error) {
         console.error('Error fetching case:', error);
     } finally {

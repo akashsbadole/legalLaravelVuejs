@@ -438,21 +438,24 @@ const router = useRouter();
 const loading = ref(true);
 const error = ref(null);
 const activityFilter = ref('all');
-const reportType = ref('overview');
+const activities = ref([]);
+const loadingActivities = ref(false);
 
-// Report data
-const reportData = ref({
-    totalRevenue: 0,
-    outstandingAmount: 0,
-    overdueAmount: 0,
-    casesWithBilling: [],
-    attorneyStats: [],
-    clientStats: [],
-    monthlyRevenue: [],
-    revenueByPeriod: [],
-    expensesByCategory: [],
-    trustBalances: [],
-    cases: []
+const loadActivities = async () => {
+    loadingActivities.value = true;
+    try {
+        const response = await axios.get('/api/activities', { params: { limit: 20 } });
+        activities.value = response.data.activities || [];
+    } catch (error) {
+        console.error('Failed to load activities:', error);
+    } finally {
+        loadingActivities.value = false;
+    }
+};
+
+const filteredActivities = computed(() => {
+    if (activityFilter.value === 'all') return activities.value;
+    return activities.value.filter(a => a.type === activityFilter.value);
 });
 
 // Filters
@@ -500,18 +503,6 @@ const casesByStatus = computed(() => {
         count,
         color: getStatusColor(name)
     }));
-});
-
-const filteredActivities = computed(() => {
-    // Mock activities for now - in a real app, this would come from an API
-    const activities = [
-        { id: 1, type: 'cases', description: 'New case created', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', iconColor: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300', created_at: new Date(Date.now() - 3600000).toISOString() },
-        { id: 2, type: 'tasks', description: 'Task completed', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', iconColor: 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300', created_at: new Date(Date.now() - 7200000).toISOString() },
-        { id: 3, type: 'invoices', description: 'Invoice generated', icon: 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z', iconColor: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300', created_at: new Date(Date.now() - 10800000).toISOString() }
-    ];
-
-    if (activityFilter.value === 'all') return activities;
-    return activities.filter(a => a.type === activityFilter.value);
 });
 
 // Helper functions
@@ -643,6 +634,7 @@ onMounted(() => {
         reportType.value = queryType;
     }
     loadReportData();
+    loadActivities();
 });
 
 // Watch filters

@@ -22,7 +22,7 @@ class CalendarEvent extends Model
         'client_id',
         'status',
         'reminder',
-        'reminder_minutes'
+        'reminder_minutes',
     ];
 
     protected $casts = [
@@ -55,7 +55,14 @@ class CalendarEvent extends Model
 
     public function scopeInDateRange($query, $startDate, $endDate)
     {
-        return $query->whereBetween('start_date', [$startDate, $endDate]);
+        return $query->where(function ($q) use ($startDate, $endDate) {
+            $q->whereBetween('start_date', [$startDate, $endDate])
+                ->orWhereBetween('end_date', [$startDate, $endDate])
+                ->orWhere(function ($inner) use ($startDate, $endDate) {
+                    $inner->where('start_date', '<=', $startDate)
+                        ->where('end_date', '>=', $endDate);
+                });
+        });
     }
 
     public function scopeUpcoming($query)

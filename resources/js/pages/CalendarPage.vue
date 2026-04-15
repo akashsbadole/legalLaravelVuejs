@@ -70,7 +70,9 @@
 
             <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                 <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Event</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        {{ editingEventId ? 'Edit Event' : 'Add Event' }}
+                    </h3>
                     
                     <form @submit.prevent="addEvent" class="space-y-4">
                         <div>
@@ -107,13 +109,13 @@
                         </div>
                         
                         <div class="flex justify-end gap-3">
-                            <button type="button" @click="showAddModal = false"
+                            <button type="button" @click="resetNewEvent(); showAddModal = false"
                                 class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                                 Cancel
                             </button>
                             <button type="submit"
                                 class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
-                                Add Event
+                                {{ editingEventId ? 'Update Event' : 'Add Event' }}
                             </button>
                         </div>
                     </form>
@@ -130,6 +132,10 @@
                         {{ selectedEvent.description }}
                     </p>
                     <div class="flex justify-end">
+                        <button @click="openEditModal(selectedEvent)"
+                            class="px-4 py-2 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900 rounded-lg mr-2">
+                            Edit
+                        </button>
                         <button @click="deleteEvent(selectedEvent.id); selectedEvent = null"
                             class="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg mr-2">
                             Delete
@@ -155,6 +161,7 @@ const currentDate = ref(new Date());
 const events = ref([]);
 const showAddModal = ref(false);
 const selectedEvent = ref(null);
+const editingEventId = ref(null);
 
 const newEvent = reactive({
     title: '',
@@ -242,23 +249,52 @@ const addEvent = async () => {
             description: newEvent.description
         };
         
-        const response = await axios.post('/api/calendar/events', payload);
-        
-        events.value.push({
-            id: response.data.event.id,
-            title: response.data.event.title,
-            type: response.data.event.type,
-            start_date: response.data.event.start_date,
-            start_time: response.data.event.start_time,
-            description: newEvent.description
-        });
+        if (editingEventId.value) {
+            // Update existing event
+            const response = await axios.put(`/api/calendar/events/${editingEventId.value}`, payload);
+            const index = events.value.findIndex(e => e.id === editingEventId.value);
+            if (index !== -1) {
+                events.value[index] = {
+                    ...events.value[index],
+                    ...response.data.event
+                };
+            }
+        } else {
+            // Create new event
+            const response = await axios.post('/api/calendar/events', payload);
+            events.value.push({
+                id: response.data.event.id,
+                title: response.data.event.title,
+                type: response.data.event.type,
+                start_date: response.data.event.start_date,
+                start_time: response.data.event.start_time,
+                description: newEvent.description
+            });
+        }
         
         showAddModal.value = false;
-        Object.assign(newEvent, { title: '', type: 'meeting', date: '', time: '', description: '' });
+        resetNewEvent();
     } catch (error) {
-        console.error('Failed to create event:', error);
-        alert('Failed to create event. Please try again.');
+        console.error('Failed to save event:', error);
+        alert('Failed to save event. Please try again.');
     }
+};
+
+const openEditModal = (event) => {
+    editingEventId.value = event.id;
+    newEvent.title = event.title;
+    // Convert type back: stored type may be 'case_hearing' but select uses 'case'
+    newEvent.type = event.type === 'case_hearing' ? 'case' : event.type;
+    newEvent.date = event.start_date; // the event object has start_date
+    newEvent.time = event.start_time || '';
+    newEvent.description = event.description || '';
+    showAddModal.value = true;
+    selectedEvent.value = null; // close detail modal
+};
+
+const resetNewEvent = () => {
+    Object.assign(newEvent, { title: '', type: 'meeting', date: '', time: '', description: '' });
+    editingEventId.value = null;
 };
 
 const deleteEvent = async (id) => {

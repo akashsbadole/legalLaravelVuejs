@@ -41,6 +41,7 @@
                                 <div class="flex items-center space-x-2">
                                     <span class="text-xs text-gray-400">{{ formatTime(notification.created_at) }}</span>
                                     <button v-if="!notification.is_read" @click="markRead(notification)" class="text-primary-600 hover:text-primary-700 text-sm">Mark read</button>
+                                    <button @click="deleteNotification(notification.id)" class="text-red-600 hover:text-red-700 text-sm">Delete</button>
                                 </div>
                             </div>
                         </div>
@@ -111,6 +112,16 @@ const markAllRead = async () => {
         notifications.value.forEach(n => n.is_read = true);
     } catch (error) {
         console.error('Failed to mark all as read:', error);
+    }
+};
+
+const deleteNotification = async (notificationId) => {
+    if (!confirm('Delete this notification?')) return;
+    try {
+        await axios.delete(`/api/notifications/${notificationId}`);
+        notifications.value = notifications.value.filter(n => n.id !== notificationId);
+    } catch (error) {
+        console.error('Failed to delete notification:', error);
     }
 };
 

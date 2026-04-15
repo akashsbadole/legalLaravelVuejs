@@ -190,14 +190,44 @@ const documentStore = useDocumentStore()
 const isDarkMode = ref(false)
 const templateSearch = ref('')
 const selectedCategory = ref('')
+onMounted(() => { loadTemplates(); loadRecentDocuments(); });
+
 const aiStats = ref({
   requests_today: 0,
   documents_created: 0,
   avg_compliance: 0
 })
 
+// Load from API
+const templates = ref([]);
+const loadingTemplates = ref(false);
+const loadTemplates = async () => {
+  loadingTemplates.value = true;
+  try {
+    const response = await axios.get("/api/document-templates");
+    templates.value = response.data || [];
+  } catch (error) {
+    console.error("Failed to load templates:", error);
+  } finally {
+    loadingTemplates.value = false;
+  }
+};
+
+const loadRecentDocuments = async () => {
+  try {
+    const response = await axios.get("/api/documents?per_page=6");
+    recentDocuments.value = response.data.data || [];
+  } catch (error) {
+    console.error("Failed to load recent documents:", error);
+  }
+};
+
+// Initialize data
+loadTemplates();
+loadRecentDocuments();
+
 // Mock data for templates
-const templates = ref([
+const templatesFallback = ref([
   {
     slug: 'nda',
     name: 'Non-Disclosure Agreement',

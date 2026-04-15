@@ -87,28 +87,33 @@ const filters = reactive({ type: '', user: '', date: '' });
 const filteredLogs = computed(() => {
     return logs.value.filter(log => {
         const matchType = !filters.type || log.module.toLowerCase() === filters.type.toLowerCase();
-        const matchUser = !filters.user || log.user_id === filters.user;
+        const matchUser = !filters.user || log.user_id === parseInt(filters.user);
         const matchDate = !filters.date || log.created_at.startsWith(filters.date);
         return matchType && matchUser && matchDate;
     });
 });
 
-onMounted(() => {
-    users.value = [
-        { id: 1, name: 'Admin User' },
-        { id: 2, name: 'John Attorney' },
-        { id: 3, name: 'Sarah Paralegal' },
-    ];
+const loadUsers = async () => {
+    try {
+        const response = await axios.get('/api/admin/users');
+        users.value = response.data.users || [];
+    } catch (error) {
+        console.error('Failed to load users:', error);
+    }
+};
 
-    logs.value = [
-        { id: 1, user_id: 1, user: 'Admin User', action: 'Create', module: 'Case', description: 'Created new case: Smith vs. Johnson', created_at: '2026-04-13T14:30:00', ip: '192.168.1.100' },
-        { id: 2, user_id: 2, user: 'John Attorney', action: 'Update', module: 'Case', description: 'Updated case status to Active', created_at: '2026-04-13T14:25:00', ip: '192.168.1.101' },
-        { id: 3, user_id: 1, user: 'Admin User', action: 'Login', module: 'System', description: 'User logged in successfully', created_at: '2026-04-13T14:20:00', ip: '192.168.1.100' },
-        { id: 4, user_id: 3, user: 'Sarah Paralegal', action: 'Upload', module: 'Document', description: 'Uploaded: Contract_2024.pdf', created_at: '2026-04-13T13:45:00', ip: '192.168.1.102' },
-        { id: 5, user_id: 2, user: 'John Attorney', action: 'Invoice', module: 'Billing', description: 'Created invoice INV-2024-0045', created_at: '2026-04-13T12:30:00', ip: '192.168.1.101' },
-        { id: 6, user_id: 1, user: 'Admin User', action: 'Create', module: 'User', description: 'Created new user: test@example.com', created_at: '2026-04-13T11:15:00', ip: '192.168.1.100' },
-        { id: 7, user_id: 3, user: 'Sarah Paralegal', action: 'Update', module: 'Task', description: 'Marked task as completed', created_at: '2026-04-13T10:00:00', ip: '192.168.1.102' },
-    ];
+const loadLogs = async () => {
+    try {
+        const response = await axios.get('/api/admin/audit-logs');
+        logs.value = response.data.logs || [];
+    } catch (error) {
+        console.error('Failed to load audit logs:', error);
+    }
+};
+
+onMounted(() => {
+    loadUsers();
+    loadLogs();
 });
 
 function formatDateTime(date) {

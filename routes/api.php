@@ -1,30 +1,40 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CalendarController;
 use App\Http\Controllers\Api\CaseController;
 use App\Http\Controllers\Api\Chatbot\ChatbotDocumentCategoryController;
 use App\Http\Controllers\Api\Chatbot\ChatbotDocumentController;
 use App\Http\Controllers\Api\Chatbot\ChatbotDocumentSearchController;
+use App\Http\Controllers\Api\ClientPortalController;
+use App\Http\Controllers\Api\GlobalSearchController;
 use App\Http\Controllers\Api\Legal\ChatbotController;
 use App\Http\Controllers\Api\Legal\ConstitutionController;
 use App\Http\Controllers\Api\Legal\CpcController;
 use App\Http\Controllers\Api\Legal\CrpcController;
 use App\Http\Controllers\Api\Legal\IpcController;
 use App\Http\Controllers\Api\Legal\SearchController;
-use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\Api\CalendarController;
-use App\Http\Controllers\Api\ClientPortalController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TrustAccountController;
 use App\Http\Controllers\CommunicationHealthController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\TwilioWebhookController;
+use App\Models\AuditLog;
 use App\Models\CaseStatus;
 use App\Models\CaseTask;
+use App\Models\Document;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
+use App\Models\FollowUp;
+use App\Models\InteractionLog;
 use App\Models\Invoice;
 use App\Models\Lead;
 use App\Models\LegalCase;
 use App\Models\Setting;
+use App\Models\TimeEntry;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -123,6 +133,7 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
     });
     Route::delete('/clients/{user}', function (User $user) {
         $user->delete();
+
         return response()->json(['message' => 'Client deleted']);
     });
 
@@ -154,6 +165,7 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
     });
     Route::post('/invoices/{invoice}/payment', function (Invoice $invoice) {
         $invoice->update(['status' => 'paid', 'paid_date' => now()]);
+
         return $invoice;
     });
     Route::put('/invoices/{invoice}', function (Request $request, Invoice $invoice) {
@@ -166,10 +178,12 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
             'status' => 'sometimes|string',
         ]);
         $invoice->update($data);
+
         return $invoice;
     });
     Route::delete('/invoices/{invoice}', function (Invoice $invoice) {
         $invoice->delete();
+
         return response()->json(['message' => 'Invoice deleted']);
     });
 
@@ -238,19 +252,19 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
 
     // Documents - using Document model
     Route::get('/documents', function (Request $request) {
-        $query = \App\Models\Document::with(['category', 'createdBy', 'case']);
-        
+        $query = Document::with(['category', 'createdBy', 'case']);
+
         if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }
-        
+
         return $query->latest()->paginate(20);
     });
     Route::get('/documents/all', function () {
-        return \App\Models\Document::with(['category'])->latest()->get();
+        return Document::with(['category'])->latest()->get();
     });
     Route::post('/documents', function (Request $request) {
         $data = $request->validate([
@@ -261,29 +275,32 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
             'is_generated' => 'nullable|boolean',
         ]);
         $data['created_by'] = auth()->id();
-        
-        return \App\Models\Document::create($data);
+
+        return Document::create($data);
     });
-    Route::put('/documents/{document}', function (Request $request, \App\Models\Document $document) {
+    Route::put('/documents/{document}', function (Request $request, Document $document) {
         $data = $request->validate([
             'name' => 'sometimes|string',
             'category_id' => 'nullable|exists:document_categories,id',
             'case_id' => 'nullable|exists:legal_cases,id',
         ]);
         $document->update($data);
+
         return $document;
     });
-    Route::delete('/documents/{document}', function (\App\Models\Document $document) {
+    Route::delete('/documents/{document}', function (Document $document) {
         $document->delete();
+
         return response()->json(['message' => 'Document deleted']);
     });
 
     // Expenses
     Route::get('/expenses', function (Request $request) {
-        $query = \App\Models\Expense::with('category');
+        $query = Expense::with('category');
         if ($request->has('case_id')) {
             $query->where('case_id', $request->case_id);
         }
+
         return $query->latest()->paginate(20);
     });
     Route::post('/expenses', function (Request $request) {
@@ -295,9 +312,10 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
             'date' => 'nullable|date',
         ]);
         $data['created_by'] = auth()->id();
-        return \App\Models\Expense::create($data);
+
+        return Expense::create($data);
     });
-    Route::put('/expenses/{expense}', function (Request $request, \App\Models\Expense $expense) {
+    Route::put('/expenses/{expense}', function (Request $request, Expense $expense) {
         $data = $request->validate([
             'description' => 'sometimes|string',
             'amount' => 'sometimes|numeric|min:0',
@@ -306,19 +324,22 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
             'date' => 'nullable|date',
         ]);
         $expense->update($data);
+
         return $expense;
     });
-    Route::delete('/expenses/{expense}', function (\App\Models\Expense $expense) {
+    Route::delete('/expenses/{expense}', function (Expense $expense) {
         $expense->delete();
+
         return response()->json(['message' => 'Expense deleted']);
     });
 
     // Time Entries
     Route::get('/time-entries', function (Request $request) {
-        $query = \App\Models\TimeEntry::with('case');
+        $query = TimeEntry::with('case');
         if ($request->has('case_id')) {
             $query->where('case_id', $request->case_id);
         }
+
         return $query->latest()->paginate(20);
     });
     Route::post('/time-entries', function (Request $request) {
@@ -330,9 +351,10 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
             'date' => 'nullable|date',
         ]);
         $data['user_id'] = auth()->id();
-        return \App\Models\TimeEntry::create($data);
+
+        return TimeEntry::create($data);
     });
-    Route::put('/time-entries/{timeEntry}', function (Request $request, \App\Models\TimeEntry $timeEntry) {
+    Route::put('/time-entries/{timeEntry}', function (Request $request, TimeEntry $timeEntry) {
         $data = $request->validate([
             'description' => 'sometimes|string',
             'hours' => 'sometimes|numeric|min:0',
@@ -341,16 +363,18 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
             'date' => 'nullable|date',
         ]);
         $timeEntry->update($data);
+
         return $timeEntry;
     });
-    Route::delete('/time-entries/{timeEntry}', function (\App\Models\TimeEntry $timeEntry) {
+    Route::delete('/time-entries/{timeEntry}', function (TimeEntry $timeEntry) {
         $timeEntry->delete();
+
         return response()->json(['message' => 'Time entry deleted']);
     });
 
     // Expense Categories
     Route::get('/expense-categories', function () {
-        return \App\Models\ExpenseCategory::all();
+        return ExpenseCategory::all();
     });
 
     // Calendar Events CRUD
@@ -384,15 +408,6 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
     Route::put('/trust-accounts/{trustAccount}', [TrustAccountController::class, 'update']);
     Route::delete('/trust-accounts/{trustAccount}', [TrustAccountController::class, 'destroy']);
 
-    // Notifications
-    Route::get('/notifications', function () {
-        return response()->json([
-            ['id' => 1, 'type' => 'case', 'title' => 'New Case Assigned', 'message' => 'Case "Smith vs. Johnson" has been assigned to you.', 'read' => false, 'created_at' => now()->subMinutes(5)->toISOString()],
-            ['id' => 2, 'type' => 'task', 'title' => 'Task Due Tomorrow', 'message' => '"Review contract draft" is due tomorrow.', 'read' => false, 'created_at' => now()->subHours(1)->toISOString()],
-            ['id' => 3, 'type' => 'billing', 'title' => 'Invoice Payment Received', 'message' => 'Payment of $5,000 received.', 'read' => true, 'created_at' => now()->subDays(1)->toISOString()],
-        ]);
-    });
-
     // Search
     Route::get('/search', function (Request $request) {
         $q = $request->query('q', '');
@@ -417,10 +432,11 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
 
     // CRM Interactions
     Route::get('/crm/interactions', function (Request $request) {
-        $query = \App\Models\InteractionLog::with('client');
+        $query = InteractionLog::with('client');
         if ($request->has('client_id')) {
             $query->where('client_id', $request->client_id);
         }
+
         return $query->latest()->paginate(20);
     });
     Route::post('/crm/interactions', function (Request $request) {
@@ -434,9 +450,10 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
             'scheduled_at' => 'nullable|date',
         ]);
         $data['created_by'] = auth()->id();
-        return \App\Models\InteractionLog::create($data);
+
+        return InteractionLog::create($data);
     });
-    Route::put('/crm/interactions/{interaction}', function (Request $request, \App\Models\InteractionLog $interaction) {
+    Route::put('/crm/interactions/{interaction}', function (Request $request, InteractionLog $interaction) {
         $data = $request->validate([
             'type' => 'sometimes|string|in:call,email,meeting,note',
             'subject' => 'sometimes|string',
@@ -446,22 +463,25 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
             'scheduled_at' => 'nullable|date',
         ]);
         $interaction->update($data);
+
         return $interaction;
     });
-    Route::delete('/crm/interactions/{interaction}', function (\App\Models\InteractionLog $interaction) {
+    Route::delete('/crm/interactions/{interaction}', function (InteractionLog $interaction) {
         $interaction->delete();
+
         return response()->json(['message' => 'Interaction deleted']);
     });
 
     // Follow-ups
     Route::get('/crm/follow-ups', function (Request $request) {
-        $query = \App\Models\FollowUp::with(['client', 'assignedTo']);
+        $query = FollowUp::with(['client', 'assignedTo']);
         if ($request->has('client_id')) {
             $query->where('client_id', $request->client_id);
         }
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
+
         return $query->latest()->paginate(20);
     });
     Route::post('/crm/follow-ups', function (Request $request) {
@@ -475,9 +495,10 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
             'status' => 'nullable|string|in:pending,completed,cancelled',
         ]);
         $data['created_by'] = auth()->id();
-        return \App\Models\FollowUp::create($data);
+
+        return FollowUp::create($data);
     });
-    Route::put('/crm/follow-ups/{followUp}', function (Request $request, \App\Models\FollowUp $followUp) {
+    Route::put('/crm/follow-ups/{followUp}', function (Request $request, FollowUp $followUp) {
         $data = $request->validate([
             'title' => 'sometimes|string',
             'description' => 'nullable|string',
@@ -487,10 +508,12 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
             'status' => 'nullable|string|in:pending,completed,cancelled',
         ]);
         $followUp->update($data);
+
         return $followUp;
     });
-    Route::delete('/crm/follow-ups/{followUp}', function (\App\Models\FollowUp $followUp) {
+    Route::delete('/crm/follow-ups/{followUp}', function (FollowUp $followUp) {
         $followUp->delete();
+
         return response()->json(['message' => 'Follow-up deleted']);
     });
 });
@@ -521,7 +544,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // Settings Routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'set.tenant'])->group(function () {
     Route::get('/settings', function () {
         $settings = Setting::all()->pluck('value', 'key');
         $settings['currency_symbol'] = match ($settings['currency'] ?? 'USD') {
@@ -576,7 +599,7 @@ Route::prefix('legal')->group(function () {
 });
 
 // Legal Chatbot Conversation API Routes
-Route::prefix('legal/chatbot')->group(function () {
+Route::middleware(['auth:sanctum', 'set.tenant', 'throttle:50,3600'])->prefix('legal/chatbot')->group(function () {
     Route::post('/conversation', [ChatbotController::class, 'conversation']);
     Route::get('/conversations', [ChatbotController::class, 'conversations']);
     Route::get('/conversation/{conversation}', [ChatbotController::class, 'showConversation']);
@@ -620,7 +643,7 @@ Route::prefix('chatbot/documents')->group(function () {
 });
 
 // Client Portal API Routes
-Route::middleware('auth:sanctum')->prefix('portal')->group(function () {
+Route::middleware(['auth:sanctum', 'set.tenant'])->prefix('portal')->group(function () {
     Route::get('/dashboard', [ClientPortalController::class, 'dashboard']);
     Route::get('/cases', [ClientPortalController::class, 'cases']);
     Route::get('/invoices', [ClientPortalController::class, 'invoices']);
@@ -628,11 +651,55 @@ Route::middleware('auth:sanctum')->prefix('portal')->group(function () {
 });
 
 // Admin API Routes
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'set.tenant'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard']);
     Route::get('/users', [AdminController::class, 'users']);
     Route::put('/users/{user}/toggle-status', [AdminController::class, 'toggleUserStatus']);
     Route::get('/audit-logs', [AdminController::class, 'auditLogs']);
+});
+
+// Global Search API Routes
+Route::middleware('auth:sanctum')->prefix('search')->group(function () {
+    Route::get('/', [GlobalSearchController::class, 'search']);
+    Route::get('/recent', [GlobalSearchController::class, 'recentSearches']);
+    Route::post('/save', [GlobalSearchController::class, 'saveSearch']);
+});
+
+// Activity Feed API
+Route::middleware('auth:sanctum')->prefix('activities')->group(function () {
+    Route::get('/', [ActivityController::class, 'index']);
+});
+
+// Client Activities API
+Route::middleware('auth:sanctum')->prefix('clients')->group(function () {
+    Route::get('/{client}/activities', function (Request $request, $client) {
+        $clientModel = User::findOrFail($client);
+        $activities = AuditLog::where('user_id', $clientModel->id)->latest()->limit(20)->get()->map(fn ($log) => ['id' => $log->id, 'description' => $log->description, 'created_at' => $log->created_at]);
+
+        return response()->json(['activities' => $activities]);
+    });
+});
+
+// Case Timeline API
+Route::middleware('auth:sanctum')->prefix('cases')->group(function () {
+    Route::get('/{case}/timeline', function (Request $request, $case) {
+        $caseModel = LegalCase::findOrFail($case);
+        $timeline = AuditLog::where('description', 'like', '%'.$caseModel->title.'%')->latest()->limit(20)->get()->map(fn ($log) => ['id' => $log->id, 'description' => $log->description, 'type' => $log->action, 'created_at' => $log->created_at]);
+        if ($timeline->isEmpty()) {
+            $timeline = collect([['id' => 1, 'description' => 'Case created', 'type' => 'created', 'created_at' => $caseModel->created_at]]);
+        }
+
+        return response()->json(['timeline' => $timeline]);
+    });
+});
+
+// Tenant Management API Routes
+Route::middleware('auth:sanctum')->prefix('tenants')->group(function () {
+    Route::get('/', [TenantController::class, 'index']);
+    Route::post('/', [TenantController::class, 'store']);
+    Route::get('/{tenant}', [TenantController::class, 'show']);
+    Route::put('/{tenant}', [TenantController::class, 'update']);
+    Route::delete('/{tenant}', [TenantController::class, 'destroy']);
 });
 
 // Webhook routes (no auth required)

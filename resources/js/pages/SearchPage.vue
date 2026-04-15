@@ -162,6 +162,8 @@ function getTypeBadge(type) {
     return badges[type] || badges.case;
 }
 
+onMounted(() => { loadRecentSearches(); });
+
 function formatDate(date) {
     return new Date(date).toLocaleDateString();
 }

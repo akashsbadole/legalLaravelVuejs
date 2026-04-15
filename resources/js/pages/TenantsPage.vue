@@ -73,15 +73,15 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ tenant.domain }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ tenant.slug }}</td>
                                 <td class="px-6 py-4 text-sm">
-                                    <span :class="getPlanClass(tenant.plan)" class="px-2 py-1 text-xs rounded-full">{{ tenant.plan }}</span>
+                                    <span :class="getPlanClass(tenant.subscription_plan)" class="px-2 py-1 text-xs rounded-full">{{ tenant.subscription_plan }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ tenant.users }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ tenant.users_count || 0 }}</td>
                                 <td class="px-6 py-4">
-                                    <span :class="getStatusClass(tenant.status)" class="px-2 py-1 text-xs rounded-full">{{ tenant.status }}</span>
+                                    <span :class="getStatusClass(tenant.subscription_status)" class="px-2 py-1 text-xs rounded-full">{{ tenant.subscription_status }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ formatDate(tenant.expires) }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ formatDate(tenant.subscription_expires_at) }}</td>
                                 <td class="px-6 py-4 text-sm">
                                     <button @click="viewTenant(tenant)" class="text-blue-600 hover:text-blue-500 mr-3">View</button>
                                     <button v-if="tenant.status === 'active'" @click="suspendTenant(tenant)" class="text-red-600 hover:text-red-500">Suspend</button>
@@ -144,31 +144,51 @@ const form = reactive({ name: '', email: '', domain: '', plan: 'basic' });
 
 const filteredTenants = computed(() => {
     return tenants.value.filter(t => {
-        const matchStatus = !filters.status || t.status === filters.status;
-        const matchSearch = !filters.search || t.name.toLowerCase().includes(filters.search.toLowerCase()) || t.domain.toLowerCase().includes(filters.search.toLowerCase());
+        const matchStatus = !filters.status || t.subscription_status === filters.status;
+        const matchSearch = !filters.search || t.name.toLowerCase().includes(filters.search.toLowerCase()) || (t.slug || '').toLowerCase().includes(filters.search.toLowerCase());
         return matchStatus && matchSearch;
     });
 });
 
+const loadTenants = async () => {
+    loading.value = true;
+    try {
+        const response = await axios.get('/api/tenants');
+        tenants.value = response.data.tenants || [];
+    } catch (error) {
+        console.error('Failed to load tenants:', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
 onMounted(() => {
-    tenants.value = [
-        { id: 1, name: 'Acme Corporation', email: 'admin@acme.com', domain: 'acme.legalfirm.test', plan: 'enterprise', users: 25, status: 'active', expires: '2027-01-15' },
-        { id: 2, name: 'TechStart Inc', email: 'admin@techstart.com', domain: 'techstart.legalfirm.test', plan: 'pro', users: 12, status: 'active', expires: '2026-08-20' },
-        { id: 3, name: 'Global Solutions', email: 'admin@global.com', domain: 'global.legalfirm.test', plan: 'basic', users: 5, status: 'trial', expires: '2026-04-25' },
-        { id: 4, name: 'Smith & Associates', email: 'admin@smith.com', domain: 'smith.legalfirm.test', plan: 'pro', users: 8, status: 'suspended', expires: '2026-03-01' },
-        { id: 5, name: 'Legal Partners', email: 'admin@legalpartners.com', domain: 'legalpartners.legalfirm.test', plan: 'enterprise', users: 18, status: 'active', expires: '2027-06-30' },
-    ];
+    loadTenants();
 });
 
 function formatDate(date) { return new Date(date).toLocaleDateString(); }
 function getPlanClass(plan) {
-    return { enterprise: 'bg-purple-100 text-purple-800', pro: 'bg-blue-100 text-blue-800', basic: 'bg-gray-100 text-gray-800' }[plan] || '';
+    return { enterprise: 'bg-purple-100 text-purple-800', professional: 'bg-blue-100 text-blue-800', basic: 'bg-gray-100 text-gray-800' }[plan] || '';
 }
 function getStatusClass(status) {
-    return { active: 'bg-green-100 text-green-800', suspended: 'bg-red-100 text-red-800', trial: 'bg-yellow-100 text-yellow-800' }[status] || '';
+    return { active: 'bg-green-100 text-green-800', suspended: 'bg-red-100 text-red-800', trial: 'bg-yellow-100 text-yellow-800', cancelled: 'bg-gray-100 text-gray-800' }[status] || '';
 }
 function viewTenant(t) { alert(`Viewing: ${t.name}`); }
-function suspendTenant(t) { t.status = 'suspended'; }
-function activateTenant(t) { t.status = 'active'; }
+async function suspendTenant(t) {
+    try {
+        await axios.put(`/api/tenants/${t.id}`, { subscription_status: 'suspended' });
+        t.subscription_status = 'suspended';
+    } catch (error) {
+        console.error('Failed to suspend tenant:', error);
+    }
+}
+async function activateTenant(t) {
+    try {
+        await axios.put(`/api/tenants/${t.id}`, { subscription_status: 'active' });
+        t.subscription_status = 'active';
+    } catch (error) {
+        console.error('Failed to activate tenant:', error);
+    }
+}
 function createTenant() { alert('Tenant created!'); showModal.value = false; }
 </script>

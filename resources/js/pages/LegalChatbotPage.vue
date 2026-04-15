@@ -209,9 +209,21 @@ const askQuestion = (question) => {
   sendMessage()
 }
 
-const loadConversation = (conversation) => {
-  // Load conversation history
-  console.log('Load conversation:', conversation)
+const loadConversation = async (conversation) => {
+  try {
+    await chatbotStore.loadConversation(conversation.id);
+    // Set messages from loaded conversation
+    messages.value = chatbotStore.getCurrentConversationMessages.map(msg => ({
+      id: msg.id,
+      type: msg.sender === 'user' ? 'user' : 'ai',
+      content: msg.message,
+      references: msg.references || [],
+      timestamp: new Date(msg.created_at)
+    }));
+    scrollToBottom();
+  } catch (error) {
+    console.error('Failed to load conversation:', error);
+  }
 }
 
 const formatDate = (dateString) => {

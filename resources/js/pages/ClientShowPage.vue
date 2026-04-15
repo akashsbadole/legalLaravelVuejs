@@ -196,10 +196,15 @@ onMounted(async () => {
         const invoicesRes = await axios.get('invoices');
         clientInvoices.value = invoicesRes.data.data?.filter(i => i.client_id === client.value.id) || [];
         
-        activities.value = [
-            { id: 1, description: 'Client profile created', created_at: client.value.created_at },
-            { id: 2, description: 'Welcome email sent', created_at: client.value.created_at }
-        ];
+        try {
+            const activitiesRes = await axios.get(`/api/clients/${client.value.id}/activities`);
+            activities.value = activitiesRes.data.activities || [];
+        } catch (e) {
+            activities.value = [
+                { id: 1, description: 'Client profile created', created_at: client.value.created_at },
+                { id: 2, description: 'Welcome email sent', created_at: client.value.created_at }
+            ];
+        }
     } catch (error) {
         console.error('Error fetching client:', error);
     }
