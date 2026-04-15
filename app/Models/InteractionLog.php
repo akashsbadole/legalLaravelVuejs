@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class InteractionLog extends Model
 {
     protected $fillable = [
-        'user_id', 'case_id', 'created_by', 'type', 'subject', 'body', 'recipients',
+        'user_id', 'case_id', 'created_by', 'type', 'channel', 'subject', 'body', 'recipients',
         'sent_at', 'direction', 'status', 'notes', 'call_duration', 'call_outcome',
-        'phone_number', 'call_notes'
+        'phone_number', 'call_notes',
     ];
 
     protected function casts(): array
@@ -38,7 +38,7 @@ class InteractionLog extends Model
 
     public function getCallDurationFormattedAttribute(): string
     {
-        if (!$this->call_duration) {
+        if (! $this->call_duration) {
             return '—';
         }
 

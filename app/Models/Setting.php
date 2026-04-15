@@ -14,36 +14,36 @@ class Setting extends Model
     public function typedValue()
     {
         $value = $this->value;
-        
+
         // Try to parse as boolean
         if (strtolower($value) === 'true' || strtolower($value) === 'false') {
             return filter_var($value, FILTER_VALIDATE_BOOLEAN);
         }
-        
+
         // Try to parse as integer
         if (filter_var($value, FILTER_VALIDATE_INT) !== false) {
-            return (int)$value;
+            return (int) $value;
         }
-        
+
         // Try to parse as float
         if (filter_var($value, FILTER_VALIDATE_FLOAT) !== false) {
-            return (float)$value;
+            return (float) $value;
         }
-        
+
         // Try to parse as JSON
-        if (is_string($value) && 
-            (substr($value, 0, 1) === '{' || substr($value, 0, 1) === '[') && 
+        if (is_string($value) &&
+            (substr($value, 0, 1) === '{' || substr($value, 0, 1) === '[') &&
             substr($value, -1) === '}') {
             return json_decode($value, true);
         }
-        
+
         return $value;
     }
 
     /**
      * Set a setting value by key
      */
-    public static function set(string $key, $value, string $group = 'general', string $description = null)
+    public static function set(string $key, $value, string $group = 'general', ?string $description = null)
     {
         if (is_array($value) || is_object($value)) {
             $value = json_encode($value);

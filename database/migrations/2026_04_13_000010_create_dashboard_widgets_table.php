@@ -18,7 +18,7 @@ return new class extends Migration
             $table->json('config_json')->nullable();
             $table->string('size')->default('half');
             $table->timestamps();
-            
+
             $table->index(['user_id', 'position']);
         });
     }

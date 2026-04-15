@@ -77,7 +77,7 @@ class SendFollowUp implements ShouldQueue
                     Log::info('Follow-up call scheduled', [
                         'user_id' => $user->id,
                         'phone' => $user->phone,
-                        'message' => $this->followUp->message
+                        'message' => $this->followUp->message,
                     ]);
                     break;
             }
@@ -91,7 +91,7 @@ class SendFollowUp implements ShouldQueue
             $this->followUp->update(['status' => 'failed']);
             Log::error('Follow-up failed', [
                 'follow_up_id' => $this->followUp->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }

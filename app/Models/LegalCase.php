@@ -2,21 +2,22 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class LegalCase extends Model
 {
+    use HasFactory, BelongsToTenant;
     protected $table = 'cases';
-    
+
     protected $fillable = [
         'case_number', 'title', 'description', 'case_type', 'status_id',
         'assigned_attorney_id', 'client_id', 'open_date', 'expected_close_date',
         'actual_close_date', 'estimated_value', 'notes', 'hourly_rate',
-        'assigned_staff', 'assignment_changed_at', 'assignment_changed_by'
+        'assigned_staff', 'assignment_changed_at', 'assignment_changed_by',
     ];
 
     protected function casts(): array
@@ -100,7 +101,8 @@ class LegalCase extends Model
     {
         $year = date('Y');
         $lastCase = self::where('case_number', 'like', "CASE-{$year}%")->orderBy('case_number', 'desc')->first();
-        $sequence = $lastCase ? (int)substr($lastCase->case_number, -4) + 1 : 1;
+        $sequence = $lastCase ? (int) substr($lastCase->case_number, -4) + 1 : 1;
+
         return sprintf('CASE-%s-%04d', $year, $sequence);
     }
 
@@ -132,6 +134,7 @@ class LegalCase extends Model
     public function getClientNameAttribute(): ?string
     {
         $client = $this->getClientUserAttribute();
+
         return $client?->name;
     }
 }

@@ -1,0 +1,83 @@
+# ==========================================
+# Your App Name - Docker Compose
+# ==========================================
+# Rename this file to: docker-compose.yml
+
+version: '3.8'
+
+services:
+  # ==========================================
+  # Your App Container
+  # ==========================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: your-app-name-app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://your-domain.com
+      
+      # Database - Update these
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=your_database_name
+      - DB_USERNAME=your_db_username
+      - DB_PASSWORD=your_db_password
+      
+      # Cache (optional)
+      - CACHE_DRIVER=file
+      - SESSION_DRIVER=file
+      - QUEUE_CONNECTION=sync
+      
+    depends_on:
+      - mysql
+    volumes:
+      # Persist storage
+      - app_storage:/var/www/html/storage
+    networks:
+      - your-network
+
+  # ==========================================
+  # MySQL Database
+  # ==========================================
+  mysql:
+    image: mysql:8.0
+    container_name: your-app-name-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=your_database_name
+      - MYSQL_ROOT_PASSWORD=your_root_password
+      - MYSQL_USER=your_db_username
+      - MYSQL_PASSWORD=your_db_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - your-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ==========================================
+# Volumes - Data Persistence
+# ==========================================
+volumes:
+  mysql_data:
+    driver: local
+  app_storage:
+    driver: local
+
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  your-network:
+    driver: bridge

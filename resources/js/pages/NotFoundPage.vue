@@ -1,0 +1,2 @@
+<template><AppLayout><div class="text-center py-12"><h1 class="text-6xl font-bold text-gray-900 dark:text-white">404</h1><p class="text-xl text-gray-600 mt-4">Page not found</p><router-link to="/dashboard" class="mt-6 inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Go to Dashboard</router-link></div></AppLayout></template>
+<script setup>import AppLayout from '../layouts/AppLayout.vue';</script>

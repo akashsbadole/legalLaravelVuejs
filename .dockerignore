@@ -1,0 +1,51 @@
+# ==========================================
+# Docker Ignore File
+# ==========================================
+
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+docker-compose*.yml
+Dockerfile
+.docker/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+storage/logs/*
+!storage/logs/.gitkeep
+
+# Cache
+bootstrap/cache/*
+!bootstrap/cache/.gitkeep
+!bootstrap/cache/*.php
+
+# Testing
+.phpunit.result.cache
+phpunit.xml
+tests/
+
+# Documentation
+*.md
+docs/
+
+# Misc
+*.log
+*.tmp
+Thumbs.db

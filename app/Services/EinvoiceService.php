@@ -10,8 +10,11 @@ use Illuminate\Support\Facades\Log;
 class EinvoiceService
 {
     private ?string $gstin;
+
     private ?string $username;
+
     private ?string $password;
+
     private string $env;
 
     public function __construct()
@@ -24,25 +27,25 @@ class EinvoiceService
 
     public function isEnabled(): bool
     {
-        return !empty($this->gstin) && !empty($this->username);
+        return ! empty($this->gstin) && ! empty($this->username);
     }
 
     public function generateEinvoice(Invoice $invoice): ?array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return null;
         }
 
         try {
             $payload = $this->buildEinvoicePayload($invoice);
-            
+
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'user_name' => $this->username,
                 'user_gstin' => $this->gstin,
             ])->withBasicAuth($this->username, $this->password)
-            ->post($this->getApiUrl() . '/einvoice', $payload);
+                ->post($this->getApiUrl().'/einvoice', $payload);
 
             if ($response->successful()) {
                 $irn = $response->json('result.irn');
@@ -63,10 +66,12 @@ class EinvoiceService
                 ];
             }
 
-            Log::error('E-invoice generation failed: ' . $response->body());
+            Log::error('E-invoice generation failed: '.$response->body());
+
             return ['success' => false, 'error' => $response->json()];
         } catch (\Exception $e) {
-            Log::error('E-invoice exception: ' . $e->getMessage());
+            Log::error('E-invoice exception: '.$e->getMessage());
+
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -74,13 +79,13 @@ class EinvoiceService
     private function buildEinvoicePayload(Invoice $invoice): array
     {
         $tenant = Tenant::first();
-        
+
         $lineItems = $invoice->lineItems->map(function ($item) {
             return [
                 'sl_no' => '1',
                 'product_name' => substr($item->description, 0, 100),
                 'hsn_code' => '9982',
-                'quantity' => (int)$item->quantity,
+                'quantity' => (int) $item->quantity,
                 'unit' => 'NOS',
                 'unit_price' => round($item->unit_price, 2),
                 'total_amount' => round($item->amount, 2),
@@ -132,14 +137,14 @@ class EinvoiceService
 
     private function getApiUrl(): string
     {
-        return $this->env === 'prod' 
+        return $this->env === 'prod'
             ? 'https://einvoice-api.com/api/v1'
             : 'https://einvoice-api-staging.com/api/v1';
     }
 
     public function cancelEinvoice(Invoice $invoice, string $reason): ?array
     {
-        if (!$invoice->irn) {
+        if (! $invoice->irn) {
             return ['success' => false, 'error' => 'No IRN found'];
         }
 
@@ -150,14 +155,15 @@ class EinvoiceService
                 'user_name' => $this->username,
                 'user_gstin' => $this->gstin,
             ])->withBasicAuth($this->username, $this->password)
-            ->post($this->getApiUrl() . '/einvoice/cancel', [
-                'irn' => $invoice->irn,
-                'cancel_reason' => $reason,
-                'cancel_remarks' => $reason,
-            ]);
+                ->post($this->getApiUrl().'/einvoice/cancel', [
+                    'irn' => $invoice->irn,
+                    'cancel_reason' => $reason,
+                    'cancel_remarks' => $reason,
+                ]);
 
             if ($response->successful()) {
                 $invoice->update(['einvoice_status' => 'cancelled']);
+
                 return ['success' => true];
             }
 
@@ -174,7 +180,7 @@ class EinvoiceService
                 'user_name' => $this->username,
                 'user_gstin' => $this->gstin,
             ])->withBasicAuth($this->username, $this->password)
-            ->get($this->getApiUrl() . "/einvoice/{$irn}");
+                ->get($this->getApiUrl()."/einvoice/{$irn}");
 
             if ($response->successful()) {
                 return $response->json('result');

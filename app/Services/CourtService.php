@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 class CourtService
 {
     protected $apiKey;
+
     protected $baseUrl = 'https://api.ecourts.gov.in'; // Placeholder, real API
 
     public function __construct()
@@ -20,18 +21,20 @@ class CourtService
     {
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Accept' => 'application/json',
-            ])->get($this->baseUrl . '/cases/' . $caseNumber);
+            ])->get($this->baseUrl.'/cases/'.$caseNumber);
 
             if ($response->successful()) {
                 return $response->json();
             }
 
             Log::warning('eCourts API error', ['status' => $response->status(), 'body' => $response->body()]);
+
             return null;
         } catch (\Exception $e) {
             Log::error('eCourts API exception', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -39,12 +42,13 @@ class CourtService
     public function getHearingDates(string $caseNumber): array
     {
         $status = $this->getCaseStatus($caseNumber);
+
         return $status ? ($status['hearings'] ?? []) : [];
     }
 
     public function syncCase(LegalCase $case): void
     {
-        if (!$case->court_case_number) {
+        if (! $case->court_case_number) {
             return;
         }
 

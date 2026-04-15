@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tenant;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class TenantController extends Controller
 {
@@ -29,6 +29,7 @@ class TenantController extends Controller
     public function create(): View
     {
         $plans = Tenant::getPlans();
+
         return view('admin.tenants.create', compact('plans'));
     }
 
@@ -37,7 +38,6 @@ class TenantController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|unique:tenants,slug',
-            'domain' => 'nullable|string|unique:tenants,domain',
             'contact_email' => 'required|email',
             'contact_phone' => 'nullable|string',
             'address' => 'nullable|string',
@@ -71,6 +71,7 @@ class TenantController extends Controller
     public function edit(Tenant $tenant): View
     {
         $plans = Tenant::getPlans();
+
         return view('admin.tenants.edit', compact('tenant', 'plans'));
     }
 
@@ -78,8 +79,7 @@ class TenantController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'slug' => 'sometimes|string|unique:tenants,slug,' . $tenant->id,
-            'domain' => 'nullable|string|unique:tenants,domain,' . $tenant->id,
+            'slug' => 'sometimes|string|unique:tenants,slug,'.$tenant->id,
             'contact_email' => 'sometimes|email',
             'subscription_plan' => 'sometimes|in:basic,professional,enterprise',
             'subscription_status' => 'sometimes|in:active,suspended,expired,cancelled',
@@ -130,6 +130,6 @@ class TenantController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Subscription extended by ' . $validated['days'] . ' days.');
+        return back()->with('success', 'Subscription extended by '.$validated['days'].' days.');
     }
 }

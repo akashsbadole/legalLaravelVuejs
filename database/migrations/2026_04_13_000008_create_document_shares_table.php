@@ -25,7 +25,7 @@ return new class extends Migration
             $table->integer('max_views')->nullable();
             $table->string('share_token', 64)->unique();
             $table->timestamps();
-            
+
             $table->index('share_token');
         });
     }

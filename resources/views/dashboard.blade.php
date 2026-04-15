@@ -1,4 +1,11 @@
 <x-app-layout>
+    <x-slot name="meta">
+        <meta name="description" content="Legal practice management dashboard. Monitor cases, clients, billing, tasks, and team performance at a glance.">
+        <meta property="og:title" content="Dashboard - {{ config('app.name') }}">
+        <meta property="og:description" content="Legal practice management dashboard.">
+        <meta property="og:url" content="{{ url('/dashboard') }}">
+        <link rel="canonical" href="{{ url('/dashboard') }}">
+    </x-slot>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Dashboard') }}

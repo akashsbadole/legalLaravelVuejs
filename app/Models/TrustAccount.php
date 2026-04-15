@@ -4,14 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TrustAccount extends Model
 {
     protected $fillable = [
         'client_id', 'case_id', 'created_by', 'transaction_type',
         'amount', 'balance', 'description', 'reference_number',
-        'transaction_date', 'status'
+        'transaction_date', 'status',
     ];
 
     protected function casts(): array
@@ -69,7 +68,7 @@ class TrustAccountActivity extends Model
 
     protected $fillable = [
         'trust_account_id', 'user_id', 'action', 'amount_before',
-        'amount_after', 'description'
+        'amount_after', 'description',
     ];
 
     protected function casts(): array

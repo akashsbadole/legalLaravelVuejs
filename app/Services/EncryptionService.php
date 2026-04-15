@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 class EncryptionService
 {
     private string $algorithm;
+
     private string $key;
 
     public function __construct()
@@ -25,9 +26,10 @@ class EncryptionService
         try {
             $encrypted = Crypt::encrypt($data);
             Log::debug('Data encrypted successfully');
+
             return $encrypted;
         } catch (\Exception $e) {
-            Log::error('Encryption failed: ' . $e->getMessage());
+            Log::error('Encryption failed: '.$e->getMessage());
             throw $e;
         }
     }
@@ -36,14 +38,14 @@ class EncryptionService
     {
         try {
             $decrypted = Crypt::decrypt($encrypted);
-            
+
             if ($asArray || str_starts_with($decrypted, '{') || str_starts_with($decrypted, '[')) {
                 return json_decode($decrypted, true);
             }
-            
+
             return $decrypted;
         } catch (\Exception $e) {
-            Log::error('Decryption failed: ' . $e->getMessage());
+            Log::error('Decryption failed: '.$e->getMessage());
             throw $e;
         }
     }
@@ -53,9 +55,11 @@ class EncryptionService
         try {
             $encrypted = $this->encrypt($value);
             Log::info("Field '{$fieldName}' encrypted", ['field' => $fieldName]);
+
             return $encrypted;
         } catch (\Exception $e) {
-            Log::warning("Failed to encrypt field '{$fieldName}': " . $e->getMessage());
+            Log::warning("Failed to encrypt field '{$fieldName}': ".$e->getMessage());
+
             return $value;
         }
     }
@@ -65,7 +69,8 @@ class EncryptionService
         try {
             return $this->decrypt($encrypted);
         } catch (\Exception $e) {
-            Log::warning("Failed to decrypt field '{$fieldName}': " . $e->getMessage());
+            Log::warning("Failed to decrypt field '{$fieldName}': ".$e->getMessage());
+
             return $encrypted;
         }
     }
@@ -90,12 +95,12 @@ class EncryptionService
         if (strlen($data) <= $visibleChars * 2) {
             return str_repeat('*', strlen($data));
         }
-        
+
         $visibleStart = substr($data, 0, $visibleChars);
         $visibleEnd = substr($data, -$visibleChars);
         $masked = str_repeat('*', strlen($data) - ($visibleChars * 2));
-        
-        return $visibleStart . $masked . $visibleEnd;
+
+        return $visibleStart.$masked.$visibleEnd;
     }
 
     public function maskEmail(string $email): string
@@ -104,26 +109,26 @@ class EncryptionService
         if (count($parts) !== 2) {
             return $this->maskSensitiveData($email);
         }
-        
+
         $username = $parts[0];
         $domain = $parts[1];
-        
+
         if (strlen($username) <= 2) {
-            return '**@' . $domain;
+            return '**@'.$domain;
         }
-        
-        return substr($username, 0, 2) . str_repeat('*', strlen($username) - 2) . '@' . $domain;
+
+        return substr($username, 0, 2).str_repeat('*', strlen($username) - 2).'@'.$domain;
     }
 
     public function maskPhone(string $phone): string
     {
         $phone = preg_replace('/[^0-9]/', '', $phone);
-        
+
         if (strlen($phone) <= 4) {
             return str_repeat('*', strlen($phone));
         }
-        
-        return str_repeat('*', strlen($phone) - 4) . substr($phone, -4);
+
+        return str_repeat('*', strlen($phone) - 4).substr($phone, -4);
     }
 
     public function anonymize(string $data, string $type = 'text'): string
@@ -139,7 +144,8 @@ class EncryptionService
     private function anonymizeName(string $name): string
     {
         $parts = explode(' ', $name);
-        $anonymized = array_map(fn($part) => str_repeat('*', strlen($part)), $parts);
+        $anonymized = array_map(fn ($part) => str_repeat('*', strlen($part)), $parts);
+
         return implode(' ', $anonymized);
     }
 }

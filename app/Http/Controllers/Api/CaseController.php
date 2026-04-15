@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CaseStatus;
 use App\Models\LegalCase;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CaseController extends Controller
 {
@@ -14,14 +15,14 @@ class CaseController extends Controller
         $query = LegalCase::with(['status', 'assignedAttorney', 'client']);
 
         if ($request->filled('status')) {
-            $query->where('case_status_id', $request->status);
+            $query->where('status_id', $request->status);
         }
 
-        if ($request->filled('attorney')) {
-            $query->where('assigned_attorney_id', $request->attorney);
+        if ($request->filled('type')) {
+            $query->where('case_type', $request->type);
         }
 
-        $cases = $query->paginate($request->get('per_page', 15));
+        $cases = $query->latest()->paginate($request->get('per_page', 20));
 
         return response()->json($cases);
     }
@@ -30,15 +31,14 @@ class CaseController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'case_number' => 'required|string|unique:cases,case_number',
-            'case_status_id' => 'required|exists:case_statuses,id',
-            'assigned_attorney_id' => 'required|exists:users,id',
-            'client_id' => 'nullable|exists:users,id',
-            'description' => 'nullable|string',
-            'filing_date' => 'nullable|date',
-            'court_name' => 'nullable|string',
             'case_type' => 'nullable|string',
+            'status_id' => 'nullable|exists:case_statuses,id',
+            'description' => 'nullable|string',
         ]);
+
+        $validated['case_number'] = LegalCase::generateCaseNumber();
+        $validated['case_status_id'] = $validated['status_id'] ?? CaseStatus::first()?->id;
+        $validated['open_date'] = now();
 
         $case = LegalCase::create($validated);
 
@@ -47,9 +47,9 @@ class CaseController extends Controller
 
     public function show(LegalCase $legalCase): JsonResponse
     {
-        $legalCase->load(['status', 'assignedAttorney', 'client', 'participants', 'notes', 'tasks']);
+        $legalCase->load(['status', 'assignedAttorney', 'client', 'tasks']);
 
-        return response()->json(['data' => $legalCase]);
+        return response()->json($legalCase);
     }
 
     public function update(Request $request, LegalCase $legalCase): JsonResponse
@@ -57,11 +57,8 @@ class CaseController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
             'case_status_id' => 'sometimes|exists:case_statuses,id',
-            'assigned_attorney_id' => 'sometimes|exists:users,id',
-            'description' => 'nullable|string',
-            'filing_date' => 'nullable|date',
-            'court_name' => 'nullable|string',
             'case_type' => 'nullable|string',
+            'description' => 'nullable|string',
         ]);
 
         $legalCase->update($validated);
@@ -90,7 +87,7 @@ class CaseController extends Controller
         ]);
 
         $note = $legalCase->notes()->create([
-            'user_id' => auth()->id(),
+            'user_id' => auth()->id,
             'content' => $validated['content'],
         ]);
 

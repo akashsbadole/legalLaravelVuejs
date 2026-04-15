@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -25,11 +26,11 @@ class AuditLogController extends Controller
         }
 
         if ($request->filled('date_to')) {
-            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+            $query->where('created_at', '<=', $request->date_to.' 23:59:59');
         }
 
         $logs = $query->orderBy('created_at', 'desc')->paginate(50);
-        $users = \App\Models\User::all();
+        $users = User::all();
         $actions = AuditLog::distinct()->pluck('action');
 
         return view('admin.audit-logs.index', compact('logs', 'users', 'actions'));
@@ -38,6 +39,7 @@ class AuditLogController extends Controller
     public function show(AuditLog $auditLog): View
     {
         $auditLog->load('user');
+
         return view('admin.audit-logs.show', compact('auditLog'));
     }
 
@@ -54,7 +56,7 @@ class AuditLogController extends Controller
         }
 
         if ($request->filled('date_to')) {
-            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+            $query->where('created_at', '<=', $request->date_to.' 23:59:59');
         }
 
         $logs = $query->orderBy('created_at', 'desc')->get();

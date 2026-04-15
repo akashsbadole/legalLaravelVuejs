@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use App\Models\AdminOnboarding;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckAdminOnboarding
@@ -23,7 +22,7 @@ class CheckAdminOnboarding
             $currentRoute = $request->route() ? $request->route()->getName() : '';
             $isOnboardingRoute = in_array($currentRoute, ['admin.onboarding', 'admin.onboarding.next', 'admin.onboarding.skip']);
 
-            if (!$isOnboardingRoute && !$this->hasCompletedOnboarding($user)) {
+            if (! $isOnboardingRoute && ! $this->hasCompletedOnboarding($user)) {
                 return redirect()->route('admin.onboarding');
             }
         }

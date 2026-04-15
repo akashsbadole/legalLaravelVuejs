@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RecurringInvoice extends Model
 {
     protected $table = 'recurring_invoices';
-    
+
     protected $fillable = [
         'client_id', 'case_id', 'created_by', 'description', 'amount',
         'frequency', 'start_date', 'end_date', 'next_invoice_date',
-        'line_items_json', 'status', 'auto_send'
+        'line_items_json', 'status', 'auto_send',
     ];
 
     protected function casts(): array
@@ -63,10 +64,10 @@ class RecurringInvoice extends Model
         ];
     }
 
-    public function calculateNextInvoiceDate(): \Carbon\Carbon
+    public function calculateNextInvoiceDate(): Carbon
     {
-        $date = \Carbon\Carbon::parse($this->next_invoice_date);
-        
+        $date = Carbon::parse($this->next_invoice_date);
+
         switch ($this->frequency) {
             case 'weekly':
                 return $date->addWeek();
@@ -85,7 +86,7 @@ class RecurringInvoice extends Model
 
     public function isActive(): bool
     {
-        return $this->status === 'active' && 
-               (!$this->end_date || now()->lte($this->end_date));
+        return $this->status === 'active' &&
+               (! $this->end_date || now()->lte($this->end_date));
     }
 }

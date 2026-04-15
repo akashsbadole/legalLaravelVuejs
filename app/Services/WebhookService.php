@@ -31,8 +31,8 @@ class WebhookService
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'X-Webhook-Event' => $event,
-                'X-Webhook-Signature' => $webhook->secret 
-                    ? hash_hmac('sha256', json_encode($payload), $webhook->secret) 
+                'X-Webhook-Signature' => $webhook->secret
+                    ? hash_hmac('sha256', json_encode($payload), $webhook->secret)
                     : null,
             ])->timeout(30)->post($webhook->url, $payload);
 
@@ -42,11 +42,11 @@ class WebhookService
             ]);
 
             if ($response->failed()) {
-                Log::error("Webhook failed for {$webhook->url}: " . $response->body());
+                Log::error("Webhook failed for {$webhook->url}: ".$response->body());
             }
         } catch (\Exception $e) {
             $webhook->increment('failure_count');
-            Log::error("Webhook exception: " . $e->getMessage());
+            Log::error('Webhook exception: '.$e->getMessage());
         }
     }
 

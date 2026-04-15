@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserSession extends Model
 {
     protected $table = 'user_sessions';
-    
+
     protected $fillable = [
         'user_id', 'session_id', 'ip_address', 'user_agent',
         'device_type', 'browser', 'platform', 'location',
-        'last_activity', 'is_current', 'logged_in_at', 'logged_out_at'
+        'last_activity', 'is_current', 'logged_in_at', 'logged_out_at',
     ];
 
     protected function casts(): array
@@ -80,12 +80,13 @@ class UserSession extends Model
     public static function terminateSession(User $user, int $sessionId): bool
     {
         $session = self::where('id', $sessionId)->where('user_id', $user->id)->first();
-        
+
         if ($session) {
             $session->update(['logged_out_at' => now(), 'is_current' => false]);
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -102,26 +103,49 @@ class UserSession extends Model
         if (preg_match('/mobile|android|iphone|ipad|phone/i', $userAgent)) {
             return 'mobile';
         }
+
         return 'desktop';
     }
 
     private static function detectBrowser(string $userAgent): string
     {
-        if (preg_match('/chrome/i', $userAgent)) return 'Chrome';
-        if (preg_match('/firefox/i', $userAgent)) return 'Firefox';
-        if (preg_match('/safari/i', $userAgent)) return 'Safari';
-        if (preg_match('/edge/i', $userAgent)) return 'Edge';
-        if (preg_match('/opera/i', $userAgent)) return 'Opera';
+        if (preg_match('/chrome/i', $userAgent)) {
+            return 'Chrome';
+        }
+        if (preg_match('/firefox/i', $userAgent)) {
+            return 'Firefox';
+        }
+        if (preg_match('/safari/i', $userAgent)) {
+            return 'Safari';
+        }
+        if (preg_match('/edge/i', $userAgent)) {
+            return 'Edge';
+        }
+        if (preg_match('/opera/i', $userAgent)) {
+            return 'Opera';
+        }
+
         return 'Unknown';
     }
 
     private static function detectPlatform(string $userAgent): string
     {
-        if (preg_match('/windows/i', $userAgent)) return 'Windows';
-        if (preg_match('/mac/i', $userAgent)) return 'macOS';
-        if (preg_match('/linux/i', $userAgent)) return 'Linux';
-        if (preg_match('/android/i', $userAgent)) return 'Android';
-        if (preg_match('/ios|iphone|ipad/i', $userAgent)) return 'iOS';
+        if (preg_match('/windows/i', $userAgent)) {
+            return 'Windows';
+        }
+        if (preg_match('/mac/i', $userAgent)) {
+            return 'macOS';
+        }
+        if (preg_match('/linux/i', $userAgent)) {
+            return 'Linux';
+        }
+        if (preg_match('/android/i', $userAgent)) {
+            return 'Android';
+        }
+        if (preg_match('/ios|iphone|ipad/i', $userAgent)) {
+            return 'iOS';
+        }
+
         return 'Unknown';
     }
 
@@ -130,6 +154,7 @@ class UserSession extends Model
         if (in_array($ip, ['127.0.0.1', '::1'])) {
             return 'Localhost';
         }
+
         return null;
     }
 }

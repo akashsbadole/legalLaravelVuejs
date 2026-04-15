@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class DocumentShare extends Model
 {
     protected $table = 'document_shares';
-    
+
     protected $fillable = [
         'document_id', 'shared_by', 'shared_with_email', 'shared_with_name',
         'access_level', 'expires_at', 'password_protected', 'password',
-        'otp_code', 'otp_expires_at', 'view_count', 'last_viewed_at'
+        'otp_code', 'otp_expires_at', 'view_count', 'last_viewed_at',
     ];
 
     protected function casts(): array
@@ -52,6 +52,6 @@ class DocumentShare extends Model
 
     public function isValid(): bool
     {
-        return !$this->isExpired() && $this->view_count < ($this->max_views ?? PHP_INT_MAX);
+        return ! $this->isExpired() && $this->view_count < ($this->max_views ?? PHP_INT_MAX);
     }
 }

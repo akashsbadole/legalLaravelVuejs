@@ -11,7 +11,7 @@ class SecurityHeadersMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -26,12 +26,13 @@ class SecurityHeadersMiddleware
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
         // Content Security Policy
-        $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com; " .
-               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " .
-               "font-src 'self' https://fonts.gstatic.com; " .
-               "img-src 'self' data: https:; " .
-               "connect-src 'self'; " .
+        $csp = "default-src 'self'; ".
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; ".
+               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.bunny.net https://cdn.jsdelivr.net https://cdnjs.cloudflare.com http://localhost:* http://127.0.0.1:*; ".
+               "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.bunny.net https://cdn.jsdelivr.net https://cdnjs.cloudflare.com http://localhost:* http://127.0.0.1:*; ".
+               "font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net; ".
+               "img-src 'self' data: https:; ".
+               "connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; ".
                "frame-ancestors 'none';";
 
         $response->headers->set('Content-Security-Policy', $csp);

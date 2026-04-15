@@ -2,10 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\LegalCase;
 use App\Models\Invoice;
-use App\Models\TimeEntry;
-use App\Models\Expense;
+use App\Models\LegalCase;
 use App\Services\GSTService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -23,17 +21,17 @@ class GenerateInvoices extends Command
     {
         try {
             $cases = LegalCase::where('status_id', '!=', 4) // Assuming 4 is closed
-                ->whereHas('timeEntries', function($q) {
+                ->whereHas('timeEntries', function ($q) {
                     $q->where('billed', false);
                 })
-                ->orWhereHas('expenses', function($q) {
+                ->orWhereHas('expenses', function ($q) {
                     $q->where('billed', false);
                 })
                 ->get();
 
-            $gstService = new GSTService();
+            $gstService = new GSTService;
             $generatedCount = 0;
-            
+
             foreach ($cases as $case) {
                 $unbilledTime = $case->timeEntries()->where('billed', false)->sum('hours') * $case->hourly_rate;
                 $unbilledExpenses = $case->expenses()->where('billed', false)->sum('amount');
@@ -43,10 +41,10 @@ class GenerateInvoices extends Command
                     // Get client GSTIN for determining if it's inter-state or intra-state
                     $client = $case->client;
                     $clientGstin = $client->gstin ?? null;
-                    
+
                     // Calculate GST based on whether it's inter-state or intra-state
                     $gstData = $clientGstin ? $gstService->calculateIGST($subtotal) : $gstService->calculateGST($subtotal);
-                    
+
                     $invoice = Invoice::create([
                         'invoice_number' => Invoice::generateInvoiceNumber(),
                         'case_id' => $case->id,
@@ -76,8 +74,9 @@ class GenerateInvoices extends Command
             $this->info("Invoice generation completed. Generated {$generatedCount} invoices.");
             Log::info("Invoice generation completed. Generated {$generatedCount} invoices.");
         } catch (\Exception $e) {
-            $this->error('Invoice generation failed: ' . $e->getMessage());
-            Log::error('Invoice generation failed: ' . $e->getMessage());
+            $this->error('Invoice generation failed: '.$e->getMessage());
+            Log::error('Invoice generation failed: '.$e->getMessage());
+
             return 1;
         }
     }

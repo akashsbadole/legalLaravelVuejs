@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class CaseTask extends Model
 {
     protected $table = 'case_tasks';
-    
+
     protected $fillable = ['case_id', 'client_id', 'assigned_to', 'created_by', 'title', 'description', 'due_date', 'status', 'priority'];
 
     protected function casts(): array

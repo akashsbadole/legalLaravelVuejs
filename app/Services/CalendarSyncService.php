@@ -3,16 +3,18 @@
 namespace App\Services;
 
 use App\Models\LegalCase;
-use App\Models\CaseTask;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class CalendarSyncService
 {
     private string $provider;
+
     private ?string $apiKey;
+
     private ?string $clientId;
+
     private ?string $clientSecret;
 
     public function __construct()
@@ -25,7 +27,7 @@ class CalendarSyncService
 
     public function isEnabled(): bool
     {
-        return !empty($this->apiKey) || !empty($this->clientId);
+        return ! empty($this->apiKey) || ! empty($this->clientId);
     }
 
     public function syncCaseDeadlines(LegalCase $case): array
@@ -34,25 +36,25 @@ class CalendarSyncService
 
         if ($case->filing_date) {
             $events[] = $this->createEvent(
-                'Case Filed: ' . $case->case_number,
+                'Case Filed: '.$case->case_number,
                 $case->filing_date,
                 'Case was filed in court',
                 'court_date'
             );
         }
 
-        if (!empty($case->hearing_date)) {
+        if (! empty($case->hearing_date)) {
             $events[] = $this->createEvent(
-                'Hearing: ' . $case->case_number,
+                'Hearing: '.$case->case_number,
                 $case->hearing_date,
                 'Court hearing scheduled',
                 'hearing'
             );
         }
 
-        if (!empty($case->next_hearing_date)) {
+        if (! empty($case->next_hearing_date)) {
             $events[] = $this->createEvent(
-                'Next Hearing: ' . $case->case_number,
+                'Next Hearing: '.$case->case_number,
                 $case->next_hearing_date,
                 'Upcoming court hearing',
                 'hearing'
@@ -61,7 +63,7 @@ class CalendarSyncService
 
         foreach ($case->tasks()->whereNotNull('due_date')->get() as $task) {
             $events[] = $this->createEvent(
-                'Task Due: ' . $task->title,
+                'Task Due: '.$task->title,
                 $task->due_date,
                 $task->description,
                 'task',
@@ -80,7 +82,7 @@ class CalendarSyncService
 
     public function createCalendarEvent(array $event): array|string|null
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return null;
         }
 
@@ -96,7 +98,8 @@ class CalendarSyncService
                     return null;
             }
         } catch (\Exception $e) {
-            Log::error('Calendar sync error: ' . $e->getMessage());
+            Log::error('Calendar sync error: '.$e->getMessage());
+
             return null;
         }
     }
@@ -104,7 +107,7 @@ class CalendarSyncService
     private function createGoogleEvent(array $event): array
     {
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->getGoogleToken(),
+            'Authorization' => 'Bearer '.$this->getGoogleToken(),
             'Content-Type' => 'application/json',
         ])->post('https://www.googleapis.com/calendar/v3/calendars/primary/events', [
             'summary' => $event['title'],
@@ -132,7 +135,7 @@ class CalendarSyncService
     private function createOutlookEvent(array $event): array
     {
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->getOutlookToken(),
+            'Authorization' => 'Bearer '.$this->getOutlookToken(),
             'Content-Type' => 'application/json',
         ])->post('https://graph.microsoft.com/v1.0/me/events', [
             'subject' => $event['title'],
@@ -156,11 +159,11 @@ class CalendarSyncService
         $ics .= "VERSION:2.0\r\n";
         $ics .= "PRODID:-//LegalFirm//Calendar//EN\r\n";
         $ics .= "BEGIN:VEVENT\r\n";
-        $ics .= "UID:" . uniqid() . "@legalfirm.com\r\n";
-        $ics .= "DTSTAMP:" . now()->format('YmdHis') . "\r\n";
-        $ics .= "DTSTART:" . Carbon::parse($event['date'])->format('YmdHis') . "\r\n";
-        $ics .= "SUMMARY:" . $event['title'] . "\r\n";
-        $ics .= "DESCRIPTION:" . $event['description'] . "\r\n";
+        $ics .= 'UID:'.uniqid()."@legalfirm.com\r\n";
+        $ics .= 'DTSTAMP:'.now()->format('YmdHis')."\r\n";
+        $ics .= 'DTSTART:'.Carbon::parse($event['date'])->format('YmdHis')."\r\n";
+        $ics .= 'SUMMARY:'.$event['title']."\r\n";
+        $ics .= 'DESCRIPTION:'.$event['description']."\r\n";
         $ics .= "END:VEVENT\r\n";
         $ics .= "END:VCALENDAR\r\n";
 
@@ -201,7 +204,8 @@ class CalendarSyncService
 
             return null;
         } catch (\Exception $e) {
-            Log::error('Court API error: ' . $e->getMessage());
+            Log::error('Court API error: '.$e->getMessage());
+
             return null;
         }
     }
@@ -215,11 +219,11 @@ class CalendarSyncService
 
         foreach ($events as $event) {
             $icsContent .= "BEGIN:VEVENT\r\n";
-            $icsContent .= "UID:" . uniqid() . "@legalfirm.com\r\n";
-            $icsContent .= "DTSTAMP:" . now()->format('YmdHis') . "\r\n";
-            $icsContent .= "DTSTART;VALUE=DATE:" . Carbon::parse($event['date'])->format('Ymd') . "\r\n";
-            $icsContent .= "SUMMARY:" . $event['title'] . "\r\n";
-            $icsContent .= "DESCRIPTION:" . $event['description'] . "\r\n";
+            $icsContent .= 'UID:'.uniqid()."@legalfirm.com\r\n";
+            $icsContent .= 'DTSTAMP:'.now()->format('YmdHis')."\r\n";
+            $icsContent .= 'DTSTART;VALUE=DATE:'.Carbon::parse($event['date'])->format('Ymd')."\r\n";
+            $icsContent .= 'SUMMARY:'.$event['title']."\r\n";
+            $icsContent .= 'DESCRIPTION:'.$event['description']."\r\n";
             $icsContent .= "END:VEVENT\r\n";
         }
 

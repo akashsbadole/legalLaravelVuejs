@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\Lead;
+use App\Models\LegalCase;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class LeadController extends Controller
 {
@@ -26,8 +29,8 @@ class LeadController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('email', 'like', "%{$request->search}%")
-                  ->orWhere('company', 'like', "%{$request->search}%");
+                    ->orWhere('email', 'like', "%{$request->search}%")
+                    ->orWhere('company', 'like', "%{$request->search}%");
             });
         }
 
@@ -57,7 +60,7 @@ class LeadController extends Controller
         ]);
 
         $validated['status'] = 'new';
-        
+
         $lead = Lead::create($validated);
 
         $lead->activities()->create([
@@ -141,7 +144,7 @@ class LeadController extends Controller
         // Create client user if email provided
         $clientUser = null;
         if ($validated['create_client'] && $lead->email) {
-            $clientUser = \App\Models\User::firstOrCreate(
+            $clientUser = User::firstOrCreate(
                 ['email' => $lead->email],
                 [
                     'name' => $lead->name,
@@ -151,7 +154,7 @@ class LeadController extends Controller
             );
 
             // Create client profile
-            \App\Models\Client::create([
+            Client::create([
                 'first_name' => explode(' ', $lead->name)[0] ?? $lead->name,
                 'last_name' => explode(' ', $lead->name)[1] ?? '',
                 'email' => $lead->email,
@@ -166,8 +169,8 @@ class LeadController extends Controller
             ]);
         }
 
-        $case = \App\Models\LegalCase::create([
-            'case_number' => \App\Models\LegalCase::generateCaseNumber(),
+        $case = LegalCase::create([
+            'case_number' => LegalCase::generateCaseNumber(),
             'title' => $validated['case_title'],
             'description' => $lead->description,
             'status_id' => 1,
@@ -185,7 +188,7 @@ class LeadController extends Controller
         $lead->activities()->create([
             'user_id' => Auth::id(),
             'activity_type' => 'converted',
-            'notes' => "Converted to case: {$case->case_number}" . ($clientUser ? " and client profile created" : ""),
+            'notes' => "Converted to case: {$case->case_number}".($clientUser ? ' and client profile created' : ''),
         ]);
 
         return redirect()->route('cases.show', $case)->with('success', 'Lead converted to case successfully.');

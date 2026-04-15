@@ -3,17 +3,19 @@
 namespace App\Models;
 
 use App\Services\GSTService;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
+    use HasFactory, BelongsToTenant;
     protected $fillable = [
         'invoice_number', 'case_id', 'client_id', 'created_by', 'subtotal',
         'tax_amount', 'discount_amount', 'total_amount', 'status',
         'issue_date', 'due_date', 'paid_date', 'notes', 'gstin', 'sac_code',
-        'cgst_amount', 'sgst_amount', 'igst_amount'
+        'cgst_amount', 'sgst_amount', 'igst_amount',
     ];
 
     protected $appends = ['cgst', 'sgst', 'igst'];
@@ -61,7 +63,8 @@ class Invoice extends Model
         $year = date('Y');
         $month = date('m');
         $lastInvoice = self::where('invoice_number', 'like', "INV-{$year}{$month}%")->orderBy('invoice_number', 'desc')->first();
-        $sequence = $lastInvoice ? (int)substr($lastInvoice->invoice_number, -4) + 1 : 1;
+        $sequence = $lastInvoice ? (int) substr($lastInvoice->invoice_number, -4) + 1 : 1;
+
         return sprintf('INV-%s%s-%04d', $year, $month, $sequence);
     }
 
@@ -75,7 +78,8 @@ class Invoice extends Model
      */
     public function calculateGST()
     {
-        $gstService = new GSTService();
+        $gstService = new GSTService;
+
         return $gstService->calculateGST($this->subtotal);
     }
 

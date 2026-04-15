@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Webhook extends Model
 {
     protected $table = 'webhooks';
-    
+
     protected $fillable = [
-        'user_id', 'url', 'events', 'secret', 'is_active', 'last_triggered_at', 'failure_count'
+        'user_id', 'url', 'events', 'secret', 'is_active', 'last_triggered_at', 'failure_count',
     ];
 
     protected function casts(): array

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 class GSTService
 {
     const GST_RATE = 18; // 18% GST for legal services
+
     const SAC_CODE = '9982'; // Legal services SAC code
 
     public function calculateGST(float $amount): array
@@ -14,7 +15,7 @@ class GSTService
         $cgst = $amount * (self::GST_RATE / 2) / 100;
         $sgst = $amount * (self::GST_RATE / 2) / 100;
         $igst = $cgst + $sgst;
-        
+
         return [
             'subtotal' => $amount,
             'cgst_rate' => self::GST_RATE / 2,
@@ -32,7 +33,7 @@ class GSTService
     public function calculateIGST(float $amount): array
     {
         $igst = $amount * self::GST_RATE / 100;
-        
+
         return [
             'subtotal' => $amount,
             'igst_rate' => self::GST_RATE,
@@ -49,7 +50,8 @@ class GSTService
     {
         $year = date('Y');
         $month = date('m');
-        return "{$prefix}-{$year}{$month}-" . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+
+        return "{$prefix}-{$year}{$month}-".str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
     }
 
     public function generateGSTInvoiceData(array $lineItems, ?string $clientGstin = null): array
@@ -72,7 +74,7 @@ class GSTService
             'total_gst' => $taxData['total_gst'],
             'grand_total' => $taxData['grand_total'],
             'sac_code' => $taxData['sac_code'],
-            'is_inter_state' => !empty($clientGstin),
+            'is_inter_state' => ! empty($clientGstin),
         ];
     }
 
@@ -82,7 +84,7 @@ class GSTService
         // For firms > ₹20 crore turnover
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . config('services.gst.api_key'),
+                'Authorization' => 'Bearer '.config('services.gst.api_key'),
                 'Content-Type' => 'application/json',
             ])->post('https://api.gst.gov.in/einvoice', $invoiceData);
 

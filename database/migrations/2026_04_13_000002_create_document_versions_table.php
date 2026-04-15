@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->boolean('is_current')->default(false);
             $table->timestamps();
-            
+
             $table->unique(['document_id', 'version_number']);
         });
     }

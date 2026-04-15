@@ -21,7 +21,7 @@ return new class extends Migration
             $table->boolean('is_default')->default(false);
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
-            
+
             $table->index(['tenant_id', 'slug']);
             $table->index(['category', 'is_active']);
         });

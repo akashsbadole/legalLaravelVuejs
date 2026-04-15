@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class EmailTemplate extends Model
 {
     protected $table = 'email_templates';
-    
+
     protected $fillable = [
         'tenant_id', 'name', 'slug', 'subject', 'body', 'variables',
-        'category', 'is_active', 'is_default', 'created_by'
+        'category', 'is_active', 'is_default', 'created_by',
     ];
 
     protected function casts(): array

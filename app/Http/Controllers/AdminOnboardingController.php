@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\AdminOnboarding;
-use App\Models\User;
-use App\Models\LegalCase;
 use App\Models\CaseStatus;
+use App\Models\CaseTask;
+use App\Models\Invoice;
+use App\Models\LegalCase;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class AdminOnboardingController extends Controller
 {
@@ -34,8 +36,8 @@ class AdminOnboardingController extends Controller
         $admin = auth()->user();
         $onboarding = AdminOnboarding::where('admin_id', $admin->id)->first();
 
-        if (!$onboarding) {
-            return redirect()->route('dashboard');
+        if (! $onboarding) {
+            return redirect('/');
         }
 
         $currentStep = $onboarding->current_step;
@@ -47,7 +49,7 @@ class AdminOnboardingController extends Controller
         $onboarding->completeStep($currentStep);
 
         if ($onboarding->is_completed) {
-            return redirect()->route('dashboard')->with('success', 'Welcome! Your system is ready to use.');
+            return redirect('/')->with('success', 'Welcome! Your system is ready to use.');
         }
 
         return redirect()->route('admin.onboarding');
@@ -65,7 +67,7 @@ class AdminOnboardingController extends Controller
             ]);
         }
 
-        return redirect()->route('dashboard');
+        return redirect('/');
     }
 
     private function getStepContext(int $step): array
@@ -90,8 +92,8 @@ class AdminOnboardingController extends Controller
                 $context['features'] = [
                     'case_management' => LegalCase::count(),
                     'clients' => User::where('role', 'client')->count(),
-                    'tasks' => \App\Models\CaseTask::count(),
-                    'invoices' => \App\Models\Invoice::count(),
+                    'tasks' => CaseTask::count(),
+                    'invoices' => Invoice::count(),
                 ];
                 break;
         }

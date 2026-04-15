@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Models\Client;
 use App\Models\LegalCase;
-use App\Observers\ClientObserver;
 use App\Observers\CaseObserver;
+use App\Observers\ClientObserver;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {

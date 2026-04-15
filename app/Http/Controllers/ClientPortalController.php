@@ -2,26 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LegalCase;
+use App\Models\Client;
 use App\Models\Document;
 use App\Models\Invoice;
-use App\Models\CaseNote;
+use App\Models\LegalCase;
 use App\Models\Survey;
 use App\Models\SurveyResponse;
 use App\Services\GDPRService;
 use App\Services\OnboardingService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class ClientPortalController extends Controller
 {
     public function dashboard(): View
     {
         $client = Auth::user();
-        
+
         $cases = LegalCase::whereHas('participants', function ($query) use ($client) {
             $query->where('user_id', $client->id);
         })->with('status', 'assignedAttorney')->get();
@@ -43,7 +43,7 @@ class ClientPortalController extends Controller
     public function cases(): View
     {
         $client = Auth::user();
-        
+
         $cases = LegalCase::whereHas('participants', function ($query) use ($client) {
             $query->where('user_id', $client->id);
         })->with('status', 'assignedAttorney', 'documents', 'notes')->paginate(10);
@@ -54,16 +54,16 @@ class ClientPortalController extends Controller
     public function caseDetail(LegalCase $case): View
     {
         $this->authorizeClientCase($case);
-        
+
         $case->load(['status', 'assignedAttorney', 'participants.user', 'documents', 'notes.user']);
-        
+
         return view('portal.case-detail', compact('case'));
     }
 
     public function documents(): View
     {
         $client = Auth::user();
-        
+
         $documents = Document::whereHas('case', function ($query) use ($client) {
             $query->whereHas('participants', function ($q) use ($client) {
                 $q->where('user_id', $client->id);
@@ -90,6 +90,7 @@ class ClientPortalController extends Controller
         }
 
         $invoice->load(['case', 'lineItems']);
+
         return view('portal.invoice-detail', compact('invoice'));
     }
 
@@ -128,7 +129,7 @@ class ClientPortalController extends Controller
     {
         $user = Auth::user();
         $consents = $user->consents()->latest()->get();
-        $clientProfile = \App\Models\Client::where('email', $user->email)->first();
+        $clientProfile = Client::where('email', $user->email)->first();
 
         return view('portal.privacy', compact('consents', 'clientProfile'));
     }
@@ -158,7 +159,7 @@ class ClientPortalController extends Controller
     public function updateConsent(Request $request): RedirectResponse
     {
         $user = Auth::user();
-        $clientProfile = \App\Models\Client::where('email', $user->email)->first();
+        $clientProfile = Client::where('email', $user->email)->first();
 
         if ($clientProfile) {
             $clientProfile->update([
@@ -213,7 +214,7 @@ class ClientPortalController extends Controller
 
         $isParticipant = $case->participants()->where('user_id', $client->id)->exists();
 
-        if (!$isParticipant) {
+        if (! $isParticipant) {
             abort(403, 'You do not have access to this case.');
         }
     }

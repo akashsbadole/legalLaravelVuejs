@@ -41,7 +41,7 @@ class Onboarding extends Model
     public function completeStep($step)
     {
         $steps = $this->completed_steps ?? [];
-        if (!in_array($step, $steps)) {
+        if (! in_array($step, $steps)) {
             $steps[] = $step;
             $this->update(['completed_steps' => $steps]);
 

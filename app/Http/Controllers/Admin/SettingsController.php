@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class SettingsController extends Controller
@@ -72,7 +72,7 @@ class SettingsController extends Controller
     public function update(Request $request, Setting $setting): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
-            'key' => 'required|string|max:255|unique:settings,key,' . $setting->id,
+            'key' => 'required|string|max:255|unique:settings,key,'.$setting->id,
             'value' => 'nullable|string',
             'group' => 'required|string|max:50',
             'description' => 'nullable|string|max:255',
@@ -117,20 +117,20 @@ class SettingsController extends Controller
 
         if ($request->hasFile('file')) {
             $path = $request->file('file')->store('settings', 'public');
-            
+
             // Update or create the setting
             Setting::updateOrCreate(
                 ['key' => $request->setting_key],
                 [
                     'value' => $path,
                     'group' => 'general',
-                    'description' => 'Uploaded file for ' . $request->setting_key
+                    'description' => 'Uploaded file for '.$request->setting_key,
                 ]
             );
 
             return response()->json([
                 'success' => true,
-                'url' => Storage::disk('public')->url($path)
+                'url' => Storage::disk('public')->url($path),
             ]);
         }
 

@@ -3,9 +3,6 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\LegalCase;
-use App\Models\Invoice;
-use App\Models\Document;
 use Illuminate\Support\Facades\Log;
 
 class GDPRService
@@ -13,11 +10,11 @@ class GDPRService
     public static function anonymizeUser(User $user): void
     {
         $user->update([
-            'name' => 'Anonymous User ' . $user->id,
-            'email' => 'anonymized_' . $user->id . '@deleted.invalid',
+            'name' => 'Anonymous User '.$user->id,
+            'email' => 'anonymized_'.$user->id.'@deleted.invalid',
             'phone' => null,
             'address' => null,
-            'password' => bcrypt('anonymized_' . time()),
+            'password' => bcrypt('anonymized_'.time()),
         ]);
 
         Log::info("User {$user->id} has been anonymized per GDPR request");
@@ -34,7 +31,7 @@ class GDPRService
         ];
 
         $user->assignedCases()->update(['assigned_attorney_id' => null]);
-        
+
         $user->documents()->delete();
         $user->timeEntries()->delete();
         $user->expenses()->delete();

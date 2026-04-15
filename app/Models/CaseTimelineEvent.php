@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CaseTimelineEvent extends Model
 {
     protected $table = 'case_timeline_events';
-    
+
     protected $fillable = ['case_id', 'user_id', 'title', 'description', 'event_type', 'event_date', 'is_milestone'];
 
     protected function casts(): array
@@ -56,7 +56,7 @@ class CaseTimelineEvent extends Model
 
     public function getEventTypeColor(): string
     {
-        return match($this->event_type) {
+        return match ($this->event_type) {
             'hearing' => 'bg-red-100 text-red-800',
             'filing' => 'bg-blue-100 text-blue-800',
             'meeting' => 'bg-green-100 text-green-800',
@@ -71,7 +71,7 @@ class CaseTimelineEvent extends Model
 
     public function getEventTypeIcon(): string
     {
-        return match($this->event_type) {
+        return match ($this->event_type) {
             'hearing' => '⚖️',
             'filing' => '📄',
             'meeting' => '👥',

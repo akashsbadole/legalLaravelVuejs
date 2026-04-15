@@ -3,20 +3,20 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
+use PragmaRX\Google2FA\Google2FA;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, BelongsToTenant;
 
-    protected $fillable = ['name', 'email', 'password', 'role', 'phone', 'address', 'hourly_rate', 'is_active', 'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_enabled'];
+    protected $fillable = ['name', 'email', 'password', 'role', 'phone', 'address', 'hourly_rate', 'is_active', 'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_enabled', 'tenant_id', 'communication_preferences', 'communication_opt_out', 'gdpr_consent_given_at', 'gdpr_consent_ip'];
 
     protected function casts(): array
     {
@@ -29,12 +29,15 @@ class User extends Authenticatable
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted',
             'password_changed_at' => 'datetime',
+            'communication_preferences' => 'array',
+            'communication_opt_out' => 'boolean',
+            'gdpr_consent_given_at' => 'datetime',
         ];
     }
 
     public function assignedCases(): HasMany
     {
-        return $this->hasMany(\App\Models\LegalCase::class, 'assigned_attorney_id');
+        return $this->hasMany(LegalCase::class, 'assigned_attorney_id');
     }
 
     public function cases(): BelongsToMany
@@ -102,17 +105,33 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isClient(): bool
+    {
+        return $this->role === 'client';
+    }
+
+    public function isParalegal(): bool
+    {
+        return $this->role === 'paralegal';
+    }
+
+    public function isBillingManager(): bool
+    {
+        return $this->role === 'billing_manager';
+    }
+
     public function canAccessCase($case): bool
     {
         if ($this->isAdmin() || $this->id === $case->assigned_attorney_id) {
             return true;
         }
+
         return $case->participants()->where('user_id', $this->id)->exists();
     }
 
     public function enableTwoFactorAuthentication(): void
     {
-        $secret = \PragmaRX\Google2FA\Google2FA::generateSecretKey();
+        $secret = Google2FA::generateSecretKey();
         $this->update([
             'two_factor_secret' => $secret,
             'two_factor_enabled' => true,
@@ -131,7 +150,8 @@ class User extends Authenticatable
 
     public function getTwoFactorQrCodeUrl(): string
     {
-        $google2fa = new \PragmaRX\Google2FA\Google2FA();
+        $google2fa = new Google2FA;
+
         return $google2fa->getQRCodeUrl(
             config('app.name'),
             $this->email,
@@ -143,8 +163,9 @@ class User extends Authenticatable
     {
         $codes = [];
         for ($i = 0; $i < 8; $i++) {
-            $codes[] = strtoupper(\Illuminate\Support\Str::random(8));
+            $codes[] = strtoupper(Str::random(8));
         }
+
         return $codes;
     }
 }

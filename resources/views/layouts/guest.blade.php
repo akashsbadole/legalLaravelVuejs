@@ -5,6 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ config('app.name', 'Legal Firm') }}</title>
+        <meta name="description" content="Secure login to your legal practice management account.">
+        <meta property="og:title" content="Login - {{ config('app.name', 'Legal Firm') }}">
+        <meta property="og:description" content="Secure login to your legal practice management account.">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url('/login') }}">
+        <meta name="twitter:card" content="summary">
+        <link rel="canonical" href="{{ url('/login') }}">
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])

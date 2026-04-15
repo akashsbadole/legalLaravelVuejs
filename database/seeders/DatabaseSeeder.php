@@ -2,47 +2,68 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\CaseStatus;
-use App\Models\LegalCase;
 use App\Models\DocumentCategory;
 use App\Models\ExpenseCategory;
+use App\Models\LegalCase;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@legalfirm.com',
-            'password' => bcrypt('password'),
-            'role' => 'admin',
-            'hourly_rate' => 250,
+        // Seed Indian legal database
+        $this->call([
+            IpcSectionsSeeder::class,
+            CrpcSectionsSeeder::class,
+            CpcSectionsSeeder::class,
+            ConstitutionArticlesSeeder::class,
+            ChatbotDocumentCategorySeeder::class,
         ]);
 
-        $attorney = User::create([
-            'name' => 'Jane Attorney',
-            'email' => 'jane@legalfirm.com',
-            'password' => bcrypt('password'),
-            'role' => 'attorney',
-            'hourly_rate' => 200,
-        ]);
+        $admin = User::updateOrCreate(
+            ['email' => 'admin@legalfirm.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('password'),
+                'role' => 'admin',
+                'hourly_rate' => 250,
+                'email_verified_at' => now(),
+            ]
+        );
 
-        $paralegal = User::create([
-            'name' => 'John Paralegal',
-            'email' => 'john@legalfirm.com',
-            'password' => bcrypt('password'),
-            'role' => 'paralegal',
-            'hourly_rate' => 75,
-        ]);
+        $attorney = User::updateOrCreate(
+            ['email' => 'jane@legalfirm.com'],
+            [
+                'name' => 'Jane Attorney',
+                'password' => bcrypt('password'),
+                'role' => 'attorney',
+                'hourly_rate' => 200,
+                'email_verified_at' => now(),
+            ]
+        );
 
-        $client = User::create([
-            'name' => 'Test Client',
-            'email' => 'client@example.com',
-            'password' => bcrypt('password'),
-            'role' => 'client',
-        ]);
+        $paralegal = User::updateOrCreate(
+            ['email' => 'john@legalfirm.com'],
+            [
+                'name' => 'John Paralegal',
+                'password' => bcrypt('password'),
+                'role' => 'paralegal',
+                'hourly_rate' => 75,
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $client = User::updateOrCreate(
+            ['email' => 'client@example.com'],
+            [
+                'name' => 'Test Client',
+                'password' => bcrypt('password'),
+                'role' => 'client',
+                'email_verified_at' => now(),
+            ]
+        );
 
         $open = CaseStatus::create(['name' => 'Open', 'color' => '#28a745']);
         $pending = CaseStatus::create(['name' => 'Pending', 'color' => '#ffc107']);

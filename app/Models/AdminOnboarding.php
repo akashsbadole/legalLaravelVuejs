@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AdminOnboarding extends Model
 {
     protected $fillable = [
-        'admin_id', 'is_completed', 'completed_steps', 'current_step', 'completed_at'
+        'admin_id', 'is_completed', 'completed_steps', 'current_step', 'completed_at',
     ];
 
     protected function casts(): array
@@ -31,27 +31,27 @@ class AdminOnboarding extends Model
             1 => [
                 'title' => 'Welcome & System Overview',
                 'description' => 'Get familiar with your legal practice management system',
-                'action' => 'Continue'
+                'action' => 'Continue',
             ],
             2 => [
                 'title' => 'Create Your First Attorney',
                 'description' => 'Add attorneys to your legal team',
-                'action' => 'Add Attorney'
+                'action' => 'Add Attorney',
             ],
             3 => [
                 'title' => 'Set Up Case Types',
                 'description' => 'Configure case categories for your practice',
-                'action' => 'Configure Cases'
+                'action' => 'Configure Cases',
             ],
             4 => [
                 'title' => 'Configure Billing',
                 'description' => 'Set up billing rates and GST compliance',
-                'action' => 'Setup Billing'
+                'action' => 'Setup Billing',
             ],
             5 => [
                 'title' => 'Explore Features',
                 'description' => 'Take a tour of all available features',
-                'action' => 'Start Tour'
+                'action' => 'Start Tour',
             ],
         ];
     }
@@ -59,6 +59,7 @@ class AdminOnboarding extends Model
     public function getCurrentStepData(): array
     {
         $steps = $this->getSteps();
+
         return $steps[$this->current_step] ?? $steps[1];
     }
 

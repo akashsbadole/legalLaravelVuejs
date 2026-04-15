@@ -29,7 +29,7 @@ class CaseObserver
         if ($client && $client->email) {
             // Get or create feedback survey
             $survey = Survey::where('title', 'Case Feedback Survey')->first();
-            if (!$survey) {
+            if (! $survey) {
                 $survey = Survey::create([
                     'title' => 'Case Feedback Survey',
                     'description' => 'Please share your feedback about our legal services.',
@@ -37,20 +37,20 @@ class CaseObserver
                         [
                             'type' => 'rating',
                             'question' => 'How satisfied are you with our legal services?',
-                            'options' => ['1', '2', '3', '4', '5']
+                            'options' => ['1', '2', '3', '4', '5'],
                         ],
                         [
                             'type' => 'text',
-                            'question' => 'What did you like about our services?'
+                            'question' => 'What did you like about our services?',
                         ],
                         [
                             'type' => 'text',
-                            'question' => 'What could we improve?'
+                            'question' => 'What could we improve?',
                         ],
                         [
                             'type' => 'yes_no',
-                            'question' => 'Would you recommend us to others?'
-                        ]
+                            'question' => 'Would you recommend us to others?',
+                        ],
                     ],
                     'is_active' => true,
                 ]);

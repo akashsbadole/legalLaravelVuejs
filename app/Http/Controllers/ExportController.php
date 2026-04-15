@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LegalCase;
-use App\Models\Invoice;
-use App\Models\TimeEntry;
 use App\Models\Expense;
+use App\Models\Invoice;
+use App\Models\LegalCase;
+use App\Models\TimeEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportController extends Controller
 {
@@ -31,7 +32,7 @@ class ExportController extends Controller
             ];
         }
 
-        return $this->downloadCsv($csvData, 'cases_export_' . date('Y-m-d') . '.csv');
+        return $this->downloadCsv($csvData, 'cases_export_'.date('Y-m-d').'.csv');
     }
 
     public function exportInvoices(Request $request)
@@ -54,7 +55,7 @@ class ExportController extends Controller
             ];
         }
 
-        return $this->downloadCsv($csvData, 'invoices_export_' . date('Y-m-d') . '.csv');
+        return $this->downloadCsv($csvData, 'invoices_export_'.date('Y-m-d').'.csv');
     }
 
     public function exportTimeEntries(Request $request)
@@ -87,7 +88,7 @@ class ExportController extends Controller
             ];
         }
 
-        return $this->downloadCsv($csvData, 'time_entries_export_' . date('Y-m-d') . '.csv');
+        return $this->downloadCsv($csvData, 'time_entries_export_'.date('Y-m-d').'.csv');
     }
 
     public function exportExpenses(Request $request)
@@ -116,12 +117,12 @@ class ExportController extends Controller
             ];
         }
 
-        return $this->downloadCsv($csvData, 'expenses_export_' . date('Y-m-d') . '.csv');
+        return $this->downloadCsv($csvData, 'expenses_export_'.date('Y-m-d').'.csv');
     }
 
-    private function downloadCsv(array $data, string $filename): \Symfony\Component\HttpFoundation\StreamedResponse
+    private function downloadCsv(array $data, string $filename): StreamedResponse
     {
-        $callback = function() use ($data) {
+        $callback = function () use ($data) {
             $handle = fopen('php://output', 'w');
             foreach ($data as $row) {
                 fputcsv($handle, $row);
@@ -131,7 +132,7 @@ class ExportController extends Controller
 
         return Response::stream($callback, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 }

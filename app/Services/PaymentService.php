@@ -2,16 +2,17 @@
 
 namespace App\Services;
 
-use Stripe\Stripe;
-use Stripe\ApiRequestor;
 use App\Models\Invoice;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Stripe\PaymentIntent;
+use Stripe\Stripe;
 
 class PaymentService
 {
     private ?string $secretKey;
+
     private ?string $publishableKey;
+
     private bool $isTestMode;
 
     public function __construct()
@@ -27,7 +28,7 @@ class PaymentService
 
     public function isEnabled(): bool
     {
-        return !empty($this->secretKey);
+        return ! empty($this->secretKey);
     }
 
     public function getPublishableKey(): ?string
@@ -37,13 +38,13 @@ class PaymentService
 
     public function createPaymentIntent(Invoice $invoice): ?array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return null;
         }
 
         try {
-            $paymentIntent = \Stripe\PaymentIntent::create([
-                'amount' => (int)($invoice->total_amount * 100),
+            $paymentIntent = PaymentIntent::create([
+                'amount' => (int) ($invoice->total_amount * 100),
                 'currency' => 'usd',
                 'metadata' => [
                     'invoice_id' => $invoice->id,
@@ -57,22 +58,25 @@ class PaymentService
                 'id' => $paymentIntent->id,
             ];
         } catch (\Exception $e) {
-            Log::error('Stripe payment intent error: ' . $e->getMessage());
+            Log::error('Stripe payment intent error: '.$e->getMessage());
+
             return null;
         }
     }
 
     public function confirmPayment(string $paymentIntentId): bool
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return false;
         }
 
         try {
-            $paymentIntent = \Stripe\PaymentIntent::retrieve($paymentIntentId);
+            $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
+
             return $paymentIntent->status === 'succeeded';
         } catch (\Exception $e) {
-            Log::error('Stripe confirmation error: ' . $e->getMessage());
+            Log::error('Stripe confirmation error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -92,7 +96,8 @@ class PaymentService
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Mock payment error: ' . $e->getMessage());
+            Log::error('Mock payment error: '.$e->getMessage());
+
             return false;
         }
     }

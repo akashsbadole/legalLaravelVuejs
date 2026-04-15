@@ -10,7 +10,7 @@ class Enquiry extends Model
     protected $fillable = [
         'name', 'email', 'phone', 'category', 'priority', 'message',
         'status', 'assigned_to', 'assigned_by', 'assigned_at',
-        'admin_notes', 'resolved_at'
+        'admin_notes', 'resolved_at',
     ];
 
     protected function casts(): array
@@ -33,7 +33,7 @@ class Enquiry extends Model
 
     public function getPriorityColor(): string
     {
-        return match($this->priority) {
+        return match ($this->priority) {
             'emergency' => 'bg-red-100 text-red-800',
             'urgent' => 'bg-orange-100 text-orange-800',
             'normal' => 'bg-blue-100 text-blue-800',
@@ -43,7 +43,7 @@ class Enquiry extends Model
 
     public function getStatusColor(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'new' => 'bg-blue-100 text-blue-800',
             'assigned' => 'bg-yellow-100 text-yellow-800',
             'in_progress' => 'bg-purple-100 text-purple-800',
@@ -55,7 +55,7 @@ class Enquiry extends Model
 
     public function getCategoryDisplay(): string
     {
-        return match($this->category) {
+        return match ($this->category) {
             'civil_law' => 'Civil Law',
             'criminal_law' => 'Criminal Law',
             'corporate_law' => 'Corporate Law',

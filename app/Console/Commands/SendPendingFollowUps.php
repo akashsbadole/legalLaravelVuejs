@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\SendFollowUp;
+use App\Models\FollowUp;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -15,12 +17,12 @@ class SendPendingFollowUps extends Command
      */
     public function handle()
     {
-        $pendingFollowUps = \App\Models\FollowUp::where('status', 'pending')
+        $pendingFollowUps = FollowUp::where('status', 'pending')
             ->where('scheduled_at', '<=', now())
             ->get();
 
         foreach ($pendingFollowUps as $followUp) {
-            \App\Jobs\SendFollowUp::dispatch($followUp);
+            SendFollowUp::dispatch($followUp);
         }
 
         $this->info("Dispatched {$pendingFollowUps->count()} follow-ups.");

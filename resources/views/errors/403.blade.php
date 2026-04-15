@@ -25,7 +25,7 @@
                 </p>
 
                 <div class="space-y-4">
-                    <a href="{{ route('dashboard') }}" class="inline-block w-full bg-white text-yellow-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition transform hover:scale-105">
+                    <a href="{{ url('/') }}" class="inline-block w-full bg-white text-yellow-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition transform hover:scale-105">
                         {{ __('Go to Dashboard') }}
                     </a>
 

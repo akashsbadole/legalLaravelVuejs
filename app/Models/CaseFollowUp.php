@@ -9,7 +9,7 @@ class CaseFollowUp extends Model
 {
     protected $fillable = [
         'case_id', 'created_by', 'assigned_to', 'type', 'title', 'description',
-        'scheduled_at', 'reminder_at', 'priority', 'status', 'completed_at', 'notes'
+        'scheduled_at', 'reminder_at', 'priority', 'status', 'completed_at', 'notes',
     ];
 
     protected function casts(): array
@@ -54,13 +54,13 @@ class CaseFollowUp extends Model
     public function scopeOverdue($query)
     {
         return $query->where('scheduled_at', '<', now())
-                    ->where('status', '!=', 'completed');
+            ->where('status', '!=', 'completed');
     }
 
     public function scopeUpcoming($query, $days = 7)
     {
         return $query->where('scheduled_at', '>', now())
-                    ->where('scheduled_at', '<=', now()->addDays($days))
-                    ->where('status', 'pending');
+            ->where('scheduled_at', '<=', now()->addDays($days))
+            ->where('status', 'pending');
     }
 }

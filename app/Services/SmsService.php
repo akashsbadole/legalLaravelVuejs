@@ -2,13 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\InteractionLog;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SmsService
 {
     private ?string $apiKey;
+
     private ?string $senderId;
+
     private string $provider;
 
     public function __construct()
@@ -20,35 +24,87 @@ class SmsService
 
     public function isEnabled(): bool
     {
-        return !empty($this->apiKey);
+        return ! empty($this->apiKey);
     }
 
-    public function send(string $to, string $message): array
+    public function send(string $to, string $message, string $channel = 'sms'): array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return ['success' => false, 'error' => 'SMS service not configured'];
         }
 
         $to = $this->formatPhoneNumber($to);
 
         try {
-            switch ($this->provider) {
-                case 'msg91':
-                    return $this->sendViaMsg91($to, $message);
-                case 'twilio':
-                    return $this->sendViaTwilio($to, $message);
-                case 'textlocal':
-                    return $this->sendViaTextLocal($to, $message);
-                default:
-                    return $this->sendViaMsg91($to, $message);
-            }
+            $result = match ($this->provider) {
+                'msg91' => $this->sendViaMsg91($to, $message, $channel),
+                'twilio' => $channel === 'whatsapp'
+                    ? $this->sendViaTwilioWhatsApp($to, $message)
+                    : $this->sendViaTwilio($to, $message),
+                'textlocal' => $this->sendViaTextLocal($to, $message, $channel),
+                default => $this->sendViaMsg91($to, $message, $channel),
+            };
+
+            // Log the interaction
+            $this->logInteraction($to, $message, $channel, $result);
+
+            return $result;
         } catch (\Exception $e) {
-            Log::error('SMS send error: ' . $e->getMessage());
+            Log::error('SMS/WhatsApp send error: '.$e->getMessage());
+
+            // Log failed interaction
+            $this->logInteraction($to, $message, $channel, ['success' => false, 'error' => $e->getMessage()]);
+
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
-    private function sendViaMsg91(string $to, string $message): array
+    public function sendWhatsApp(string $to, string $message): array
+    {
+        return $this->send($to, $message, 'whatsapp');
+    }
+
+    public function sendBulkSms(array $recipients, string $message): array
+    {
+        $results = [];
+        foreach ($recipients as $to) {
+            $results[] = [
+                'recipient' => $to,
+                'result' => $this->send($to, $message, 'sms'),
+            ];
+        }
+
+        return [
+            'total' => count($recipients),
+            'successful' => count(array_filter($results, fn($r) => $r['result']['success'])),
+            'results' => $results,
+        ];
+    }
+
+    public function sendBulkWhatsApp(array $recipients, string $message): array
+    {
+        $results = [];
+        foreach ($recipients as $to) {
+            $results[] = [
+                'recipient' => $to,
+                'result' => $this->send($to, $message, 'whatsapp'),
+            ];
+        }
+
+        return [
+            'total' => count($recipients),
+            'successful' => count(array_filter($results, fn($r) => $r['result']['success'])),
+            'results' => $results,
+        ];
+    }
+
+    public function sendScheduledSms(string $to, string $message, \DateTime $scheduledTime): array
+    {
+        // For now, just send immediately. In production, queue for later sending
+        return $this->send($to, $message, 'sms');
+    }
+
+    private function sendViaMsg91(string $to, string $message, string $channel = 'sms'): array
     {
         $response = Http::withHeaders([
             'authkey' => $this->apiKey,
@@ -67,12 +123,33 @@ class SmsService
         return ['success' => false, 'error' => $response->body()];
     }
 
+    private function sendViaTwilioWhatsApp(string $to, string $message): array
+    {
+        // WhatsApp numbers should be in international format with whatsapp: prefix
+        $to = 'whatsapp:' . $this->formatPhoneNumber($to);
+
+        $response = Http::withBasicAuth(
+            config('services.twilio.account_sid'),
+            config('services.twilio.auth_token')
+        )->post('https://api.twilio.com/2010-04-01/Accounts/'.config('services.twilio.account_sid').'/Messages.json', [
+            'To' => $to,
+            'From' => 'whatsapp:' . config('services.twilio.whatsapp_number'),
+            'Body' => $message,
+        ]);
+
+        if ($response->successful()) {
+            return ['success' => true, 'id' => $response->json('sid'), 'channel' => 'whatsapp'];
+        }
+
+        return ['success' => false, 'error' => $response->body(), 'channel' => 'whatsapp'];
+    }
+
     private function sendViaTwilio(string $to, string $message): array
     {
         $response = Http::withBasicAuth(
             config('services.twilio.account_sid'),
             config('services.twilio.auth_token')
-        )->post('https://api.twilio.com/2010-04-01/Accounts/' . config('services.twilio.account_sid') . '/Messages.json', [
+        )->post('https://api.twilio.com/2010-04-01/Accounts/'.config('services.twilio.account_sid').'/Messages.json', [
             'To' => $to,
             'From' => config('services.twilio.phone_number'),
             'Body' => $message,
@@ -85,7 +162,7 @@ class SmsService
         return ['success' => false, 'error' => $response->body()];
     }
 
-    private function sendViaTextLocal(string $to, string $message): array
+    private function sendViaTextLocal(string $to, string $message, string $channel = 'sms'): array
     {
         $response = Http::post('https://api.textlocal.in/send/', [
             'apiKey' => $this->apiKey,
@@ -104,19 +181,19 @@ class SmsService
     private function formatPhoneNumber(string $phone): string
     {
         $phone = preg_replace('/[^0-9]/', '', $phone);
-        
+
         if (strlen($phone) == 10) {
-            return '91' . $phone;
+            return '91'.$phone;
         }
-        
+
         if (strlen($phone) == 11 && $phone[0] == '0') {
-            return '91' . substr($phone, 1);
+            return '91'.substr($phone, 1);
         }
-        
-        if (!str_starts_with($phone, '91')) {
-            return '91' . $phone;
+
+        if (! str_starts_with($phone, '91')) {
+            return '91'.$phone;
         }
-        
+
         return $phone;
     }
 
@@ -124,36 +201,60 @@ class SmsService
     {
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $message = "Your verification code is {$otp}. Valid for 10 minutes.";
-        
+
         $result = $this->send($to, $message);
-        
+
         if ($result['success']) {
-            cache()->put('sms_otp_' . $to, [
+            cache()->put('sms_otp_'.$to, [
                 'otp' => $otp,
                 'expires' => now()->addMinutes(10),
             ], 600);
         }
-        
+
         return $result;
     }
 
     public function verifyOtp(string $phone, string $otp): bool
     {
-        $cached = cache()->get('sms_otp_' . $phone);
-        
-        if (!$cached) {
+        $cached = cache()->get('sms_otp_'.$phone);
+
+        if (! $cached) {
             return false;
         }
-        
+
         if ($cached['otp'] !== $otp) {
             return false;
         }
-        
+
         if (now()->gt($cached['expires'])) {
             return false;
         }
-        
-        cache()->forget('sms_otp_' . $phone);
+
+        cache()->forget('sms_otp_'.$phone);
+
         return true;
+    }
+
+    private function logInteraction(string $to, string $message, string $channel, array $result): void
+    {
+        try {
+            // Find user by phone number for logging
+            $user = \App\Models\User::where('phone', 'like', '%'.substr($this->formatPhoneNumber($to), -10))->first();
+
+            InteractionLog::create([
+                'user_id' => $user ? $user->id : null,
+                'created_by' => auth()->id() ?? 1, // Default to first user if no auth
+                'type' => $channel === 'whatsapp' ? 'whatsapp' : 'sms',
+                'channel' => $channel,
+                'body' => $message,
+                'recipients' => [$to],
+                'sent_at' => now(),
+                'direction' => 'outbound',
+                'status' => $result['success'] ? 'sent' : 'failed',
+                'notes' => $result['error'] ?? null,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log SMS/WhatsApp interaction: '.$e->getMessage());
+        }
     }
 }

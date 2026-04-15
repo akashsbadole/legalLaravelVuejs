@@ -11,11 +11,11 @@ class ForceHttpsMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (config('app.force_https') && !$request->secure()) {
+        if (config('app.force_https') && ! $request->secure()) {
             return redirect()->secure($request->getRequestUri());
         }
 

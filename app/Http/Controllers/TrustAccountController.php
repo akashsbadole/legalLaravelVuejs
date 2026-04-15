@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LegalCase;
 use App\Models\TrustAccount;
 use App\Models\User;
-use App\Models\LegalCase;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class TrustAccountController extends Controller
 {
@@ -64,7 +64,7 @@ class TrustAccountController extends Controller
 
         $validated['balance'] = $newBalance;
         $validated['created_by'] = auth()->id();
-        $validated['reference_number'] = 'TA-' . date('Ymd') . '-' . strtoupper(uniqid());
+        $validated['reference_number'] = 'TA-'.date('Ymd').'-'.strtoupper(uniqid());
         $validated['status'] = 'approved';
 
         TrustAccount::create($validated);

@@ -3,14 +3,15 @@
 namespace App\Services;
 
 use App\Models\EmailTemplate;
-use App\Models\Tenant;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class EmailService
 {
     private ?string $mailDriver;
+
     private ?string $fromAddress;
+
     private ?string $fromName;
 
     public function __construct()
@@ -22,13 +23,14 @@ class EmailService
 
     public function isEnabled(): bool
     {
-        return !empty($this->fromAddress);
+        return ! empty($this->fromAddress);
     }
 
     public function send(array $to, string $subject, string $body, array $attachments = []): bool
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             Log::warning('Email service not configured');
+
             return false;
         }
 
@@ -48,9 +50,11 @@ class EmailService
             });
 
             Log::info("Email sent to {$to['email']}: {$subject}");
+
             return true;
         } catch (\Exception $e) {
-            Log::error("Email send failed: " . $e->getMessage());
+            Log::error('Email send failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -61,8 +65,9 @@ class EmailService
             ->where('is_active', true)
             ->first();
 
-        if (!$template) {
+        if (! $template) {
             Log::warning("Email template not found: {$templateSlug}");
+
             return false;
         }
 
@@ -128,14 +133,64 @@ class EmailService
     public function sendBulk(array $recipients, string $templateSlug, array $variables = []): int
     {
         $sent = 0;
-        
+
         foreach ($recipients as $recipient) {
             if ($this->sendTemplate($templateSlug, $recipient, $variables)) {
                 $sent++;
             }
         }
-        
+
         return $sent;
+    }
+
+    public function sendCampaign(string $campaignName, array $recipients, string $templateSlug, array $variables = []): array
+    {
+        $results = [
+            'campaign_name' => $campaignName,
+            'template' => $templateSlug,
+            'total_recipients' => count($recipients),
+            'sent' => 0,
+            'failed' => 0,
+            'errors' => [],
+        ];
+
+        foreach ($recipients as $index => $recipient) {
+            try {
+                if ($this->sendTemplate($templateSlug, $recipient, $variables)) {
+                    $results['sent']++;
+                } else {
+                    $results['failed']++;
+                    $results['errors'][] = "Failed to send to recipient at index {$index}";
+                }
+            } catch (\Exception $e) {
+                $results['failed']++;
+                $results['errors'][] = "Error sending to recipient at index {$index}: {$e->getMessage()}";
+            }
+        }
+
+        Log::info('Email campaign completed', $results);
+
+        return $results;
+    }
+
+    public function sendScheduledEmail(array $to, string $subject, string $body, \DateTime $scheduledTime, array $attachments = []): bool
+    {
+        // For now, send immediately. In production, dispatch to queue with delay
+        return $this->send($to, $subject, $body, $attachments);
+    }
+
+    public function sendReminder(array $to, string $reminderType, array $data): bool
+    {
+        $templates = [
+            'payment_due' => 'payment_reminder',
+            'document_deadline' => 'document_reminder',
+            'court_date' => 'court_date_reminder',
+            'follow_up' => 'follow_up_reminder',
+        ];
+
+        $templateSlug = $templates[$reminderType] ?? 'general_reminder';
+
+        return $this->sendTemplate($templateSlug, $to, $data);
     }
 
     public static function getDefaultTemplates(): array
@@ -197,6 +252,38 @@ class EmailService
                 'body' => '<h2>Hello {{client_name}},</h2><p>Thank you for choosing our legal services for case {{case_number}}.</p><p>We value your feedback! Please take a moment to complete our short survey: <a href="{{survey_url}}">{{survey_url}}</a></p><p>Your input helps us improve our services.</p>',
                 'category' => 'feedback',
                 'variables' => ['client_name', 'case_number', 'survey_url'],
+            ],
+            [
+                'name' => 'Payment Reminder',
+                'slug' => 'payment_reminder',
+                'subject' => 'Payment Reminder - Invoice {{invoice_number}}',
+                'body' => '<h2>Payment Reminder</h2><p>Hello {{client_name}},</p><p>This is a reminder that payment for invoice {{invoice_number}} is due on {{due_date}}.</p><p>Amount: {{amount}}</p><p>Please make the payment to avoid any delays in your case.</p>',
+                'category' => 'billing',
+                'variables' => ['client_name', 'invoice_number', 'due_date', 'amount'],
+            ],
+            [
+                'name' => 'Document Deadline Reminder',
+                'slug' => 'document_reminder',
+                'subject' => 'Document Submission Deadline - {{case_number}}',
+                'body' => '<h2>Document Reminder</h2><p>Hello {{client_name}},</p><p>Please submit the following documents by {{deadline_date}} to avoid delays in your case {{case_number}}:</p><p>{{required_documents}}</p><p>You can upload documents through your client portal.</p>',
+                'category' => 'case',
+                'variables' => ['client_name', 'case_number', 'deadline_date', 'required_documents'],
+            ],
+            [
+                'name' => 'Court Date Reminder',
+                'slug' => 'court_date_reminder',
+                'subject' => 'Court Date Reminder - {{case_number}}',
+                'body' => '<h2>Court Date Reminder</h2><p>Hello {{client_name}},</p><p>Your court date for case {{case_number}} is scheduled for:</p><p><strong>Date:</strong> {{court_date}}</p><p><strong>Time:</strong> {{court_time}}</p><p><strong>Location:</strong> {{court_location}}</p><p>Please arrive 30 minutes early.</p>',
+                'category' => 'case',
+                'variables' => ['client_name', 'case_number', 'court_date', 'court_time', 'court_location'],
+            ],
+            [
+                'name' => 'Follow-up Reminder',
+                'slug' => 'follow_up_reminder',
+                'subject' => 'Follow-up Required - {{case_number}}',
+                'body' => '<h2>Follow-up Reminder</h2><p>Hello {{client_name}},</p><p>This is a reminder regarding your case {{case_number}}.</p><p>{{follow_up_message}}</p><p>Please contact us if you need any assistance.</p>',
+                'category' => 'case',
+                'variables' => ['client_name', 'case_number', 'follow_up_message'],
             ],
         ];
     }

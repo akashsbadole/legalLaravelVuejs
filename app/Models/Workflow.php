@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Workflow extends Model
 {
     protected $table = 'workflows';
-    
+
     protected $fillable = [
         'tenant_id', 'name', 'trigger_type', 'conditions_json',
-        'actions_json', 'is_active', 'priority', 'created_by'
+        'actions_json', 'is_active', 'priority', 'created_by',
     ];
 
     protected function casts(): array
@@ -54,7 +54,7 @@ class Workflow extends Model
     public function shouldTrigger(array $context): bool
     {
         $trigger = $context['trigger'] ?? '';
-        
+
         if ($trigger !== $this->trigger_type) {
             return false;
         }
@@ -69,7 +69,7 @@ class Workflow extends Model
             $value = $condition['value'] ?? null;
             $contextValue = $context[$field] ?? null;
 
-            if (!$this->evaluateCondition($contextValue, $operator, $value)) {
+            if (! $this->evaluateCondition($contextValue, $operator, $value)) {
                 return false;
             }
         }
@@ -79,14 +79,14 @@ class Workflow extends Model
 
     private function evaluateCondition($value, string $operator, $target): bool
     {
-        return match($operator) {
+        return match ($operator) {
             'equals' => $value == $target,
             'not_equals' => $value != $target,
             'contains' => is_string($value) && str_contains($value, $target),
             'greater_than' => $value > $target,
             'less_than' => $value < $target,
             'is_empty' => empty($value),
-            'is_not_empty' => !empty($value),
+            'is_not_empty' => ! empty($value),
             'in' => is_array($target) && in_array($value, $target),
             default => true,
         };
@@ -96,10 +96,10 @@ class Workflow extends Model
 class WorkflowExecution extends Model
 {
     protected $table = 'workflow_executions';
-    
+
     protected $fillable = [
         'workflow_id', 'trigger_type', 'context_json', 'status',
-        'started_at', 'completed_at', 'error_message'
+        'started_at', 'completed_at', 'error_message',
     ];
 
     protected function casts(): array

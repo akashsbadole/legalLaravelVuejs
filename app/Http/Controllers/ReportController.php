@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LegalCase;
+use App\Models\CaseStatus;
 use App\Models\Invoice;
+use App\Models\LegalCase;
 use App\Models\TimeEntry;
-use App\Models\Expense;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -43,7 +43,7 @@ class ReportController extends Controller
 
         $cases = $query->get();
         $attorneys = User::whereIn('role', ['admin', 'attorney'])->get();
-        $statuses = \App\Models\CaseStatus::all();
+        $statuses = CaseStatus::all();
 
         return view('reports.cases', compact('cases', 'attorneys', 'statuses'));
     }
@@ -122,7 +122,7 @@ class ReportController extends Controller
 
         $attorneys = User::whereIn('role', ['admin', 'attorney'])->get()->map(function ($attorney) use ($dateFrom, $dateTo) {
             $cases = LegalCase::where('assigned_attorney_id', $attorney->id);
-            
+
             if ($dateFrom) {
                 $cases->where('filing_date', '>=', $dateFrom);
             }
@@ -132,7 +132,7 @@ class ReportController extends Controller
 
             $totalCases = $cases->count();
             $closedCases = $cases->clone()->whereHas('status', fn ($q) => $q->where('name', 'Closed'))->count();
-            
+
             $timeEntries = TimeEntry::where('user_id', $attorney->id);
             $totalHours = $timeEntries->clone()->sum('hours');
             $billableAmount = $timeEntries->clone()->where('status', 'approved')->get()->sum(fn ($e) => $e->hours * $e->rate);
@@ -152,7 +152,7 @@ class ReportController extends Controller
     public function export(Request $request)
     {
         $type = $request->get('type', 'cases');
-        
+
         switch ($type) {
             case 'cases':
                 return $this->exportCases($request);
@@ -228,9 +228,9 @@ class ReportController extends Controller
 
     private function downloadCsv(string $filename, array $headers, $rows)
     {
-        $csv = implode(',', $headers) . "\n";
+        $csv = implode(',', $headers)."\n";
         foreach ($rows as $row) {
-            $csv .= implode(',', $row) . "\n";
+            $csv .= implode(',', $row)."\n";
         }
 
         return response($csv)
@@ -252,7 +252,7 @@ class ReportController extends Controller
                     'active_cases' => $client->cases->where('status_id', '!=', 4)->count(),
                     'total_invoiced' => $client->invoices->sum('total_amount'),
                     'total_paid' => $client->invoices->sum('amount_paid'),
-                    'outstanding_balance' => $client->invoices->whereIn('status', ['sent', 'viewed'])->sum(function($invoice) {
+                    'outstanding_balance' => $client->invoices->whereIn('status', ['sent', 'viewed'])->sum(function ($invoice) {
                         return $invoice->total_amount - $invoice->amount_paid;
                     }),
                     'ltv' => $client->invoices->sum('amount_paid'),
@@ -271,12 +271,13 @@ class ReportController extends Controller
     public function clientActivity(): View
     {
         $clients = User::where('role', 'client')
-            ->with(['interactionLogs' => function($query) {
+            ->with(['interactionLogs' => function ($query) {
                 $query->latest()->take(10);
             }])
             ->get()
             ->map(function ($client) {
                 $interactions = $client->interactionLogs;
+
                 return [
                     'id' => $client->id,
                     'name' => $client->name,

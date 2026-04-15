@@ -15,7 +15,6 @@
                         <thead>
                             <tr class="text-left text-xs text-gray-500 uppercase">
                                 <th class="pb-4">Name</th>
-                                <th class="pb-4">Domain</th>
                                 <th class="pb-4">Created</th>
                                 <th class="pb-4">Actions</th>
                             </tr>
@@ -24,7 +23,6 @@
                             @forelse($tenants as $tenant)
                                 <tr>
                                     <td class="py-4">{{ $tenant->name }}</td>
-                                    <td class="py-4">{{ $tenant->domain }}</td>
                                     <td class="py-4">{{ $tenant->created_at->format('M d, Y') }}</td>
                                     <td class="py-4">
                                         <form method="POST" action="{{ route('admin.tenants.destroy', $tenant) }}">
@@ -36,7 +34,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="py-4 text-center text-gray-500">No tenants found.</td>
+                                    <td colspan="3" class="py-4 text-center text-gray-500">No tenants found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -30,11 +30,16 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        if ($user->two_factor_enabled) {
+        // Create API token for frontend
+        $token = $user->createToken('web-login')->plainTextToken;
+        $request->session()->put('api_token', $token);
+
+        // Skip 2FA for client users for better UX
+        if ($user->two_factor_enabled && ! $user->isClient()) {
             return redirect()->route('two-factor.verify');
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended('/');
     }
 
     /**

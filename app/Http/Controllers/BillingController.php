@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LegalCase;
-use App\Models\TimeEntry;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceLineItem;
+use App\Models\LegalCase;
+use App\Models\TimeEntry;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class BillingController extends Controller
 {
@@ -176,13 +176,13 @@ class BillingController extends Controller
         $subtotal = 0;
         $lineItems = [];
 
-        if (!empty($validated['time_entries'])) {
+        if (! empty($validated['time_entries'])) {
             $timeEntries = TimeEntry::whereIn('id', $validated['time_entries'])->where('status', 'approved')->get();
             foreach ($timeEntries as $entry) {
                 $amount = $entry->hours * $entry->rate;
                 $subtotal += $amount;
                 $lineItems[] = [
-                    'description' => $entry->description . ' (' . $entry->hours . ' hrs @ $' . $entry->rate . ')',
+                    'description' => $entry->description.' ('.$entry->hours.' hrs @ $'.$entry->rate.')',
                     'type' => 'time',
                     'reference_id' => $entry->id,
                     'quantity' => $entry->hours,
@@ -193,7 +193,7 @@ class BillingController extends Controller
             }
         }
 
-        if (!empty($validated['expenses'])) {
+        if (! empty($validated['expenses'])) {
             $expenses = Expense::whereIn('id', $validated['expenses'])->where('status', 'approved')->get();
             foreach ($expenses as $expense) {
                 $subtotal += $expense->amount;
@@ -238,12 +238,14 @@ class BillingController extends Controller
     public function showInvoice(Invoice $invoice): View
     {
         $invoice->load(['case', 'client', 'createdBy', 'lineItems']);
+
         return view('billing.show-invoice', compact('invoice'));
     }
 
     public function sendInvoice(Invoice $invoice): RedirectResponse
     {
         $invoice->update(['status' => 'sent']);
+
         return back()->with('success', 'Invoice marked as sent.');
     }
 
@@ -253,6 +255,7 @@ class BillingController extends Controller
             'status' => 'paid',
             'paid_date' => now(),
         ]);
+
         return back()->with('success', 'Invoice marked as paid.');
     }
 

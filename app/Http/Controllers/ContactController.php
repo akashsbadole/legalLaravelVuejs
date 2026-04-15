@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Enquiry;
+use App\Models\User;
 use App\Services\EmailService;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ContactController extends Controller
@@ -62,14 +63,14 @@ class ContactController extends Controller
         // Search by name or email
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('email', 'like', '%'.$request->search.'%');
             });
         }
 
         $enquiries = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        $lawyers = \App\Models\User::whereIn('role', ['admin', 'attorney'])->get();
+        $lawyers = User::whereIn('role', ['admin', 'attorney'])->get();
 
         return view('admin.enquiries.index', compact('enquiries', 'lawyers'));
     }
@@ -77,6 +78,7 @@ class ContactController extends Controller
     public function show(Enquiry $enquiry): View
     {
         $enquiry->load(['assignedUser', 'assignedBy']);
+
         return view('admin.enquiries.show', compact('enquiry'));
     }
 
@@ -130,14 +132,14 @@ class ContactController extends Controller
     private function notifyAdmin(Enquiry $enquiry): void
     {
         // Send email to all admins
-        $admins = \App\Models\User::where('role', 'admin')->get();
+        $admins = User::where('role', 'admin')->get();
 
         foreach ($admins as $admin) {
             $this->emailService->send([
                 'email' => $admin->email,
                 'name' => $admin->name,
             ], 'New Enquiry Received', "A new enquiry has been submitted by {$enquiry->name} regarding {$enquiry->getCategoryDisplay()}.", [
-                'Please review and assign this enquiry to an appropriate lawyer.'
+                'Please review and assign this enquiry to an appropriate lawyer.',
             ]);
         }
     }
@@ -151,7 +153,7 @@ class ContactController extends Controller
             'Enquiry Details:',
             "Category: {$enquiry->getCategoryDisplay()}",
             "Priority: {$enquiry->priority}",
-            "Message: {$enquiry->message}"
+            "Message: {$enquiry->message}",
         ]);
     }
 
@@ -167,7 +169,7 @@ class ContactController extends Controller
                 "Category: {$enquiry->getCategoryDisplay()}",
                 "Priority: {$enquiry->priority}",
                 "Message: {$enquiry->message}",
-                "Please review and respond to this enquiry."
+                'Please review and respond to this enquiry.',
             ]);
         }
     }
@@ -178,7 +180,7 @@ class ContactController extends Controller
             'email' => $enquiry->email,
             'name' => $enquiry->name,
         ], 'Enquiry Resolved - LegalFirm', 'Your enquiry has been resolved. Thank you for contacting us.', [
-            'If you need further assistance, please don\'t hesitate to contact us again.'
+            'If you need further assistance, please don\'t hesitate to contact us again.',
         ]);
     }
 }

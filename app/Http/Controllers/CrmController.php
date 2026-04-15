@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\InteractionLog;
-use App\Models\FollowUp;
-use App\Models\User;
 use App\Jobs\SendFollowUp;
+use App\Models\Document;
+use App\Models\FollowUp;
+use App\Models\InteractionLog;
+use App\Models\Invoice;
+use App\Models\LegalCase;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class CrmController extends Controller
 {
@@ -54,11 +57,11 @@ class CrmController extends Controller
     {
         $interactions = $client->interactionLogs()->with('creator')->latest()->paginate(20);
         $followUps = $client->followUps()->with('creator')->latest()->paginate(20);
-        $cases = \App\Models\LegalCase::where('client_id', $client->id)->with('status', 'assignedAttorney')->get();
-        $documents = \App\Models\Document::where('case_id', '!=', null)->whereHas('case', function($q) use ($client) {
+        $cases = LegalCase::where('client_id', $client->id)->with('status', 'assignedAttorney')->get();
+        $documents = Document::where('case_id', '!=', null)->whereHas('case', function ($q) use ($client) {
             $q->where('client_id', $client->id);
         })->latest()->take(5)->get();
-        $invoices = \App\Models\Invoice::where('client_id', $client->id)->latest()->take(5)->get();
+        $invoices = Invoice::where('client_id', $client->id)->latest()->take(5)->get();
         $totalInvoiced = $invoices->sum('total_amount');
         $totalPaid = $invoices->sum('amount_paid');
         $outstanding = $totalInvoiced - $totalPaid;

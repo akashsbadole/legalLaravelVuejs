@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AuthForgotPasswordController extends Controller
@@ -24,7 +24,7 @@ class AuthForgotPasswordController extends Controller
         ]);
 
         // Rate limiting for password reset attempts
-        $key = 'password_reset_' . $request->ip();
+        $key = 'password_reset_'.$request->ip();
         $attempts = cache()->get($key, 0);
 
         if ($attempts >= 5) {
@@ -84,7 +84,7 @@ class AuthForgotPasswordController extends Controller
         );
 
         // Clear rate limiting on successful reset
-        cache()->forget('password_reset_' . $request->ip());
+        cache()->forget('password_reset_'.$request->ip());
 
         return $status === Password::PASSWORD_RESET
             ? redirect()->route('login')->with('status', __($status))

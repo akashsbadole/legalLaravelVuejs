@@ -2,7 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 
 class RolePermissionSeeder extends Seeder
@@ -54,7 +55,7 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            \App\Models\Permission::create($permission);
+            Permission::create($permission);
         }
 
         // Create roles
@@ -82,12 +83,12 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($roles as $roleData) {
-            $role = \App\Models\Role::create($roleData);
+            $role = Role::create($roleData);
 
             // Assign permissions based on role
             switch ($role->name) {
                 case 'admin':
-                    $role->permissions()->attach(\App\Models\Permission::all());
+                    $role->permissions()->attach(Permission::all());
                     break;
 
                 case 'attorney':
@@ -100,7 +101,7 @@ class RolePermissionSeeder extends Seeder
                         'view_reports',
                     ];
                     $role->permissions()->attach(
-                        \App\Models\Permission::whereIn('name', $attorneyPermissions)->get()
+                        Permission::whereIn('name', $attorneyPermissions)->get()
                     );
                     break;
 
@@ -113,7 +114,7 @@ class RolePermissionSeeder extends Seeder
                         'view_tasks', 'edit_tasks',
                     ];
                     $role->permissions()->attach(
-                        \App\Models\Permission::whereIn('name', $paralegalPermissions)->get()
+                        Permission::whereIn('name', $paralegalPermissions)->get()
                     );
                     break;
 
@@ -124,7 +125,7 @@ class RolePermissionSeeder extends Seeder
                         'view_billing',
                     ];
                     $role->permissions()->attach(
-                        \App\Models\Permission::whereIn('name', $clientPermissions)->get()
+                        Permission::whereIn('name', $clientPermissions)->get()
                     );
                     break;
             }

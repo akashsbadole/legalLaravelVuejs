@@ -10,7 +10,7 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (!$request->user()) {
+        if (! $request->user()) {
             return redirect('/login');
         }
 
@@ -26,7 +26,7 @@ class RoleMiddleware
 
         $allowedRoles = $roles[$role] ?? [$role];
 
-        if (!in_array($userRole, $allowedRoles)) {
+        if (! in_array($userRole, $allowedRoles)) {
             abort(403, 'Unauthorized access.');
         }
 

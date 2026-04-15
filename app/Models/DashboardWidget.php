@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class DashboardWidget extends Model
 {
     protected $table = 'dashboard_widgets';
-    
+
     protected $fillable = [
         'user_id', 'widget_type', 'title', 'position',
-        'is_visible', 'config_json', 'size'
+        'is_visible', 'config_json', 'size',
     ];
 
     protected function casts(): array

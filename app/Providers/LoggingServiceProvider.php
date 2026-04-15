@@ -2,12 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
-use Illuminate\Auth\Events\Failed;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\ServiceProvider;
 use Throwable;
 
 class LoggingServiceProvider extends ServiceProvider
@@ -36,7 +36,8 @@ class LoggingServiceProvider extends ServiceProvider
     {
         // Create helper functions for security logging
         $this->app->singleton('securityLogger', function ($app) {
-            return new class {
+            return new class
+            {
                 public function log($message, array $context = [])
                 {
                     Log::channel('security')->info($message, array_merge($context, [

@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lead extends Model
 {
+    use BelongsToTenant;
     protected $table = 'leads';
-    
+
     protected $fillable = [
         'name', 'email', 'phone', 'company', 'description', 'assigned_to',
-        'source', 'status', 'priority', 'estimated_value', 'next_follow_up'
+        'source', 'status', 'priority', 'estimated_value', 'next_follow_up',
     ];
 
     protected function casts(): array
@@ -60,7 +61,7 @@ class Lead extends Model
 class LeadActivity extends Model
 {
     protected $table = 'lead_activities';
-    
+
     protected $fillable = ['lead_id', 'user_id', 'activity_type', 'notes'];
 
     public function lead(): BelongsTo

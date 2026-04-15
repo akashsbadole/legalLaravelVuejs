@@ -2,14 +2,15 @@
 
 namespace App\Observers;
 
-use App\Models\Client;
 use App\Models\AuditLog;
+use App\Models\Client;
 use App\Services\EmailService;
 use App\Services\OnboardingService;
 
 class ClientObserver
 {
     protected $emailService;
+
     protected $onboardingService;
 
     public function __construct(EmailService $emailService, OnboardingService $onboardingService)
@@ -34,7 +35,7 @@ class ClientObserver
     {
         // Log client data changes
         $changes = $client->getChanges();
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             AuditLog::logUpdated('client', $client->id, $client->getOriginal(), $client->toArray());
         }
     }

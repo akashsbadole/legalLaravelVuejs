@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SignatureRequest extends Model
 {
     protected $table = 'signature_requests';
-    
+
     protected $fillable = [
         'document_id', 'requested_by', 'signer_email', 'signer_name',
         'signer_phone', 'status', 'signed_at', 'signature_data',
-        'ip_address', 'signed_document_path', 'esign_provider'
+        'ip_address', 'signed_document_path', 'esign_provider',
     ];
 
     protected function casts(): array

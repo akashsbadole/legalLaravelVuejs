@@ -9,21 +9,23 @@ use Illuminate\Support\Facades\Log;
 class RazorpayService
 {
     private ?string $keyId;
+
     private ?string $keySecret;
+
     private string $baseUrl;
 
     public function __construct()
     {
         $this->keyId = config('services.razorpay.key_id');
         $this->keySecret = config('services.razorpay.key_secret');
-        $this->baseUrl = config('app.env') === 'production' 
-            ? 'https://api.razorpay.com/v1' 
+        $this->baseUrl = config('app.env') === 'production'
+            ? 'https://api.razorpay.com/v1'
             : 'https://api.razorpay.com/v1';
     }
 
     public function isEnabled(): bool
     {
-        return !empty($this->keyId) && !empty($this->keySecret);
+        return ! empty($this->keyId) && ! empty($this->keySecret);
     }
 
     public function getKeyId(): ?string
@@ -33,14 +35,14 @@ class RazorpayService
 
     public function createPaymentLink(Invoice $invoice): ?array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return null;
         }
 
         try {
             $response = Http::withBasicAuth($this->keyId, $this->keySecret)
                 ->post("{$this->baseUrl}/payment_links", [
-                    'amount' => (int)($invoice->total_amount * 100),
+                    'amount' => (int) ($invoice->total_amount * 100),
                     'currency' => 'INR',
                     'accept_partial' => false,
                     'description' => "Invoice {$invoice->invoice_number}",
@@ -68,17 +70,19 @@ class RazorpayService
                 ];
             }
 
-            Log::error('Razorpay payment link error: ' . $response->body());
+            Log::error('Razorpay payment link error: '.$response->body());
+
             return null;
         } catch (\Exception $e) {
-            Log::error('Razorpay exception: ' . $e->getMessage());
+            Log::error('Razorpay exception: '.$e->getMessage());
+
             return null;
         }
     }
 
     public function getPaymentLinkStatus(string $paymentLinkId): ?array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return null;
         }
 
@@ -96,19 +100,21 @@ class RazorpayService
 
             return null;
         } catch (\Exception $e) {
-            Log::error('Razorpay status check error: ' . $e->getMessage());
+            Log::error('Razorpay status check error: '.$e->getMessage());
+
             return null;
         }
     }
 
     public function verifyWebhook(string $payload, string $signature): bool
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return false;
         }
 
         try {
             $expectedSignature = hash_hmac('sha256', $payload, $this->keySecret);
+
             return hash_equals($expectedSignature, $signature);
         } catch (\Exception $e) {
             return false;
@@ -117,14 +123,14 @@ class RazorpayService
 
     public function createOrder(array $orderData): ?array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return null;
         }
 
         try {
             $response = Http::withBasicAuth($this->keyId, $this->keySecret)
                 ->post("{$this->baseUrl}/orders", [
-                    'amount' => (int)($orderData['amount'] * 100),
+                    'amount' => (int) ($orderData['amount'] * 100),
                     'currency' => $orderData['currency'] ?? 'INR',
                     'receipt' => $orderData['receipt'] ?? null,
                     'notes' => $orderData['notes'] ?? [],
@@ -140,7 +146,8 @@ class RazorpayService
 
             return null;
         } catch (\Exception $e) {
-            Log::error('Razorpay order creation error: ' . $e->getMessage());
+            Log::error('Razorpay order creation error: '.$e->getMessage());
+
             return null;
         }
     }

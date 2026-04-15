@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AuditLog extends Model
 {
     protected $table = 'audit_logs';
-    
+
     protected $fillable = ['user_id', 'action', 'entity_type', 'entity_id', 'description', 'old_values', 'new_values', 'ip_address', 'user_agent'];
 
     protected function casts(): array
@@ -24,10 +24,10 @@ class AuditLog extends Model
         return $this->belongsTo(User::class);
     }
 
-    public static function log(string $action, string $entityType = null, int $entityId = null, string $description = null, array $oldValues = [], array $newValues = []): self
+    public static function log(string $action, ?string $entityType = null, ?int $entityId = null, ?string $description = null, array $oldValues = [], array $newValues = []): self
     {
         $request = request();
-        
+
         return self::create([
             'user_id' => auth()->id(),
             'action' => $action,

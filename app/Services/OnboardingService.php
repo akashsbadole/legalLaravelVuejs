@@ -4,9 +4,6 @@ namespace App\Services;
 
 use App\Models\Onboarding;
 use App\Models\User;
-use App\Jobs\SendFollowUp;
-use App\Models\FollowUp;
-use App\Services\EmailService;
 use Illuminate\Support\Facades\Log;
 
 class OnboardingService
@@ -73,7 +70,7 @@ class OnboardingService
             'email' => $client->email,
             'name' => $client->name,
         ], 'Engagement Letter - Please Review and Sign', 'Please find attached our engagement letter for your review and signature.', [
-            ['path' => $documentPath, 'name' => 'engagement_letter.pdf']
+            ['path' => $documentPath, 'name' => 'engagement_letter.pdf'],
         ]);
     }
 
@@ -86,7 +83,7 @@ class OnboardingService
     {
         $onboarding = $this->getOnboardingStatus($client);
 
-        if (!$onboarding) {
+        if (! $onboarding) {
             return [
                 'completed' => 0,
                 'total' => 0,

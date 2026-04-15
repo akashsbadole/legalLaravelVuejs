@@ -3,15 +3,16 @@
 namespace App\Services;
 
 use App\Models\AppNotification;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Pusher\Pusher;
 
 class NotificationService
 {
     private ?Pusher $pusher;
+
     private string $appKey;
+
     private string $appCluster;
 
     public function __construct()
@@ -34,7 +35,7 @@ class NotificationService
 
     public function isEnabled(): bool
     {
-        return !empty($this->pusher);
+        return ! empty($this->pusher);
     }
 
     public function send(int $userId, string $title, string $message, string $type = 'info', array $data = []): ?AppNotification
@@ -69,36 +70,40 @@ class NotificationService
                 $count++;
             }
         }
+
         return $count;
     }
 
     public function broadcast(int $userId, array $data): bool
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return false;
         }
 
         try {
             $this->pusher->trigger(
-                'user-' . $userId,
+                'user-'.$userId,
                 'notification',
                 $data
             );
+
             return true;
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Pusher broadcast error: ' . $e->getMessage());
+            Log::error('Pusher broadcast error: '.$e->getMessage());
+
             return false;
         }
     }
 
     public function broadcastToChannel(string $channel, string $event, array $data): bool
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return false;
         }
 
         try {
             $this->pusher->trigger($channel, $event, $data);
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -163,7 +168,7 @@ class NotificationService
     public static function channels(int $userId): array
     {
         return [
-            new PrivateChannel('user.' . $userId),
+            new PrivateChannel('user.'.$userId),
         ];
     }
 }

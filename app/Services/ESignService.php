@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 class ESignService
 {
     protected $apiKey;
+
     protected $baseUrl = 'https://esignservice.com/api'; // Placeholder
 
     public function __construct()
@@ -21,9 +22,9 @@ class ESignService
         // Placeholder for Aadhaar eSign request
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . '/esign', [
+            ])->post($this->baseUrl.'/esign', [
                 'document_id' => $document->id,
                 'aadhaar' => $aadhaarNumber,
                 'callback_url' => route('document.esign.callback', $document),
@@ -31,6 +32,7 @@ class ESignService
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return $data['request_id'];
             }
 

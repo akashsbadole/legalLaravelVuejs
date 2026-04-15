@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Client extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
         'first_name',
@@ -45,7 +46,7 @@ class Client extends Model
         'marketing_consent',
         'data_processing_consent',
         'consent_updated_at',
-        'status'
+        'status',
     ];
 
     protected $casts = [
@@ -118,14 +119,15 @@ class Client extends Model
     // Helper methods
     public function getFullNameAttribute()
     {
-        return trim($this->first_name . ' ' . $this->last_name);
+        return trim($this->first_name.' '.$this->last_name);
     }
 
     public function getAgeAttribute()
     {
-        if (!$this->date_of_birth) {
+        if (! $this->date_of_birth) {
             return null;
         }
+
         return $this->date_of_birth->diffInYears(now());
     }
 
@@ -138,7 +140,7 @@ class Client extends Model
     {
         return $this->invoices()
             ->whereIn('status', ['sent', 'viewed', 'partial'])
-            ->sum(fn($invoice) => $invoice->balance_due);
+            ->sum(fn ($invoice) => $invoice->balance_due);
     }
 
     public function getTotalInvoicedAmountAttribute()

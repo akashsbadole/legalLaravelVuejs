@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tenant extends Model
 {
+    use HasFactory;
     protected $fillable = [
-        'name', 'slug', 'domain', 'logo', 'primary_color', 'language',
+        'name', 'slug', 'logo', 'primary_color',
         'contact_email', 'contact_phone', 'address', 'GSTIN', 'PAN',
         'subscription_plan', 'subscription_status', 'subscription_expires_at',
-        'max_users', 'max_cases', 'max_storage_mb', 'is_active'
+        'max_users', 'max_cases', 'max_storage_mb', 'is_active',
     ];
 
     protected function casts(): array
@@ -30,7 +32,7 @@ class Tenant extends Model
 
     public function cases(): HasMany
     {
-        return $this->hasMany(\App\Models\LegalCase::class, 'tenant_id');
+        return $this->hasMany(LegalCase::class, 'tenant_id');
     }
 
     public static function getPlans(): array
@@ -44,7 +46,7 @@ class Tenant extends Model
 
     public function isSubscriptionActive(): bool
     {
-        return $this->subscription_status === 'active' 
-            && (!$this->subscription_expires_at || $this->subscription_expires_at->isFuture());
+        return $this->subscription_status === 'active'
+            && (! $this->subscription_expires_at || $this->subscription_expires_at->isFuture());
     }
 }

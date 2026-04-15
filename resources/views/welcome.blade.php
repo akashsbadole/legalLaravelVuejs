@@ -4,7 +4,15 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'Laravel') }} - Legal Practice Management</title>
+        <meta name="description" content="Professional legal practice management software. Manage cases, clients, billing, documents, and more with our comprehensive law firm solution.">
+        <meta name="keywords" content="legal practice management, law firm software, legal CRM, case management, attorney software">
+        <meta property="og:title" content="{{ config('app.name', 'Laravel') }} - Legal Practice Management">
+        <meta property="og:description" content="Professional legal practice management software for law firms.">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url('/') }}">
+        <meta name="twitter:card" content="summary_large_image">
+        <link rel="canonical" href="{{ url('/') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -25,7 +33,7 @@
                 <nav class="flex items-center justify-end gap-4">
                     @auth
                         <a
-                            href="{{ url('/dashboard') }}"
+                            href="{{ url('/') }}"
                             class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] border-[#19140035] hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal"
                         >
                             Dashboard

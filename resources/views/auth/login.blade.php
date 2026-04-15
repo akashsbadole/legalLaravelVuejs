@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        <a href="{{ route('dashboard') }}" class="flex justify-center items-center mb-4">
+        <a href="{{ url('/') }}" class="flex justify-center items-center mb-4">
             <x-application-logo class="w-16 h-16 fill-current text-primary-600 dark:text-primary-400" />
         </a>
     </div>

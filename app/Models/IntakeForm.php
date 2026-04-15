@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class IntakeForm extends Model
 {
     protected $table = 'intake_forms';
-    
+
     protected $fillable = [
         'tenant_id', 'name', 'fields_json', 'is_active', 'is_public',
         'success_message', 'redirect_url', 'notify_emails',
-        'create_lead', 'assign_to', 'created_by'
+        'create_lead', 'assign_to', 'created_by',
     ];
 
     protected function casts(): array
@@ -74,9 +74,9 @@ class IntakeForm extends Model
 class IntakeSubmission extends Model
 {
     protected $table = 'intake_submissions';
-    
+
     protected $fillable = [
-        'form_id', 'lead_id', 'data_json', 'ip_address', 'user_agent', 'status'
+        'form_id', 'lead_id', 'data_json', 'ip_address', 'user_agent', 'status',
     ];
 
     protected function casts(): array

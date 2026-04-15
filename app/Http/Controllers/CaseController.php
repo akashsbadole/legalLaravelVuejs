@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LegalCase;
-use App\Models\CaseStatus;
-use App\Models\CaseNote;
-use App\Models\CaseParticipant;
+use App\Events\CaseCreated;
 use App\Models\CaseFollowUp;
-use Illuminate\Http\Request;
+use App\Models\CaseParticipant;
+use App\Models\CaseStatus;
 use App\Models\CaseTimelineEvent;
+use App\Models\InteractionLog;
+use App\Models\LegalCase;
 use App\Services\ConflictCheckService;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class CaseController extends Controller
 {
@@ -19,12 +20,30 @@ class CaseController extends Controller
 
     public function __construct()
     {
-        $this->conflictCheck = new ConflictCheckService();
+        $this->conflictCheck = new ConflictCheckService;
     }
 
     public function index(Request $request): View
     {
         $query = LegalCase::with(['status', 'assignedAttorney']);
+
+        // Filter cases based on user role
+        $user = auth()->user();
+        if ($user->isClient()) {
+            // Clients can only see cases they are participants in
+            $query->whereHas('participants', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        } elseif (! $user->isAdmin() && ! $user->isAttorney()) {
+            // Paralegals and others can see cases they are assigned to or participants in
+            $query->where(function ($q) use ($user) {
+                $q->where('assigned_attorney_id', $user->id)
+                    ->orWhereHas('participants', function ($subQ) use ($user) {
+                        $subQ->where('user_id', $user->id);
+                    });
+            });
+        }
+        // Admins and attorneys can see all cases (no additional filter)
 
         if ($request->filled('status')) {
             $query->where('status_id', $request->status);
@@ -37,7 +56,7 @@ class CaseController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('title', 'like', "%{$request->search}%")
-                  ->orWhere('case_number', 'like', "%{$request->search}%");
+                    ->orWhere('case_number', 'like', "%{$request->search}%");
             });
         }
 
@@ -50,6 +69,7 @@ class CaseController extends Controller
     public function create(): View
     {
         $statuses = CaseStatus::where('is_active', true)->get();
+
         return view('cases.create', compact('statuses'));
     }
 
@@ -72,11 +92,14 @@ class CaseController extends Controller
 
         $case = LegalCase::create($validated);
 
+        // Dispatch case created event for automation
+        CaseCreated::dispatch($case);
+
         // Create timeline event for case creation
         $case->timelineEvents()->create([
             'user_id' => auth()->id(),
             'title' => 'Case Created',
-            'description' => 'New case opened with number ' . $case->case_number,
+            'description' => 'New case opened with number '.$case->case_number,
             'event_type' => 'status_change',
             'event_date' => now(),
             'is_milestone' => true,
@@ -84,8 +107,8 @@ class CaseController extends Controller
 
         $conflicts = $this->conflictCheck->checkClientConflicts($validated['client_id'], $validated['assigned_attorney_id']);
 
-        if (!empty($conflicts)) {
-            return redirect()->route('cases.show', $case)->with('warning', 'Case created but conflict check warning: ' . $conflicts[0]['message']);
+        if (! empty($conflicts)) {
+            return redirect()->route('cases.show', $case)->with('warning', 'Case created but conflict check warning: '.$conflicts[0]['message']);
         }
 
         return redirect()->route('cases.show', $case)->with('success', 'Case created successfully.');
@@ -98,10 +121,10 @@ class CaseController extends Controller
         $case->load([
             'status', 'assignedAttorney', 'participants', 'notes', 'documents',
             'timeEntries', 'expenses', 'invoices', 'followUps.creator', 'followUps.assignee',
-            'timelineEvents'
+            'timelineEvents',
         ]);
 
-        $interactions = \App\Models\InteractionLog::where('case_id', $case->id)
+        $interactions = InteractionLog::where('case_id', $case->id)
             ->with(['creator'])
             ->orderBy('sent_at', 'desc')
             ->paginate(10);
@@ -144,7 +167,7 @@ class CaseController extends Controller
     public function destroy(LegalCase $case): RedirectResponse
     {
         $case->delete();
-        
+
         return redirect()->route('cases.index')->with('success', 'Case deleted successfully.');
     }
 
@@ -180,7 +203,7 @@ class CaseController extends Controller
     public function removeParticipant(LegalCase $case, CaseParticipant $participant): RedirectResponse
     {
         $participant->delete();
-        
+
         return back()->with('success', 'Participant removed successfully.');
     }
 
@@ -188,7 +211,7 @@ class CaseController extends Controller
     {
         $case->load(['timelineEvents.user', 'status', 'assignedAttorney']);
         $eventTypes = CaseTimelineEvent::getEventTypes();
-        
+
         return view('cases.timeline', compact('case', 'eventTypes'));
     }
 
@@ -235,7 +258,7 @@ class CaseController extends Controller
         // Add timeline event
         $case->timelineEvents()->create([
             'user_id' => auth()->id(),
-            'title' => 'Follow-up Scheduled: ' . $followUp->title,
+            'title' => 'Follow-up Scheduled: '.$followUp->title,
             'description' => $followUp->description,
             'event_type' => 'follow_up',
             'event_date' => $followUp->scheduled_at,
@@ -282,7 +305,7 @@ class CaseController extends Controller
         // Determine the user based on direction - for outbound calls it's the creator, for inbound it might be the client
         $userId = $validated['direction'] === 'outbound' ? auth()->id() : $case->client_id;
 
-        $interaction = \App\Models\InteractionLog::create([
+        $interaction = InteractionLog::create([
             'user_id' => $userId,
             'case_id' => $case->id,
             'created_by' => auth()->id(),
@@ -300,8 +323,8 @@ class CaseController extends Controller
         // Add timeline event
         $case->timelineEvents()->create([
             'user_id' => auth()->id(),
-            'title' => 'Call ' . ucfirst($validated['direction']) . ': ' . ($validated['subject'] ?: 'No subject'),
-            'description' => 'Call logged - ' . ($validated['call_outcome'] ?: 'Outcome not specified'),
+            'title' => 'Call '.ucfirst($validated['direction']).': '.($validated['subject'] ?: 'No subject'),
+            'description' => 'Call logged - '.($validated['call_outcome'] ?: 'Outcome not specified'),
             'event_type' => 'client_communication',
             'event_date' => now(),
             'is_milestone' => false,

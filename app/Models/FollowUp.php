@@ -9,7 +9,7 @@ class FollowUp extends Model
 {
     protected $fillable = [
         'user_id', 'created_by', 'type', 'subject', 'message',
-        'scheduled_at', 'sent_at', 'status', 'notes'
+        'scheduled_at', 'sent_at', 'status', 'notes',
     ];
 
     protected function casts(): array

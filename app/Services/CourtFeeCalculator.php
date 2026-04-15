@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Log;
-
 class CourtFeeCalculator
 {
     private array $feeStructure = [
@@ -32,7 +30,7 @@ class CourtFeeCalculator
     {
         $fee = 0;
         $breakdown = [];
-        
+
         $caseType = strtolower($caseType);
         $filingType = strtolower($filingType);
 
@@ -58,7 +56,7 @@ class CourtFeeCalculator
                 $breakdown = [
                     'type' => 'ad valorem',
                     'claim_amount' => $claimAmount,
-                    'rate' => ($rate * 100) . '%',
+                    'rate' => ($rate * 100).'%',
                     'calculated' => $calculatedFee,
                     'min_fee' => $minFee,
                     'max_fee' => $maxFeeCap,
@@ -103,6 +101,7 @@ class CourtFeeCalculator
     public function getFilingTypes(string $courtType): array
     {
         $courtType = strtolower($courtType);
+
         return $this->feeStructure[$courtType] ?? [];
     }
 
@@ -133,7 +132,7 @@ class CourtFeeCalculator
 
     public function calculateProcessFee(int $pages, string $serviceType = 'summons'): array
     {
-        $baseFee = match($serviceType) {
+        $baseFee = match ($serviceType) {
             'summons' => 100,
             'notice' => 150,
             'warrant' => 200,
@@ -164,7 +163,7 @@ class CourtFeeCalculator
             'case_number' => $caseNumber,
             'fee_type' => 'Court Fee',
             'amount' => $feeDetails['court_fee'] ?? 0,
-            'challan_number' => 'CF' . date('Ymd') . rand(1000, 9999),
+            'challan_number' => 'CF'.date('Ymd').rand(1000, 9999),
             'challan_date' => now()->format('Y-m-d'),
             'valid_upto' => now()->addDays(30)->format('Y-m-d'),
             'bank_name' => 'State Bank of India',

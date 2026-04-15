@@ -30,6 +30,7 @@ class InvoiceLineItem extends Model
         } elseif ($this->type === 'expense') {
             return $this->belongsTo(Expense::class, 'reference_id');
         }
+
         return null;
     }
 }

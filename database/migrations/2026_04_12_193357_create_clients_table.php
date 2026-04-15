@@ -26,42 +26,42 @@ return new class extends Migration
             $table->string('state');
             $table->string('postal_code');
             $table->string('country')->default('India');
-            
+
             // Indian-specific identification fields
             $table->string('aadhaar_number')->unique()->nullable();
             $table->string('pan_number')->unique()->nullable();
             $table->string('gstin')->unique()->nullable();
-            
+
             // Client type and classification
             $table->enum('client_type', ['individual', 'corporate', 'government', 'ngo'])->default('individual');
             $table->string('company_name')->nullable();
             $table->string('designation')->nullable();
-            
+
             // KYC/AML Compliance fields
             $table->enum('kyc_status', ['pending', 'verified', 'rejected', 'expired'])->default('pending');
             $table->timestamp('kyc_verified_at')->nullable();
             $table->foreignId('kyc_verified_by')->nullable()->constrained('users')->nullOnDelete();
-            
+
             // Client segmentation and relationship management
             $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
             $table->string('client_segment')->nullable(); // e.g., 'high-value', 'corporate', 'individual'
             $table->text('notes')->nullable();
-            
+
             // Communication preferences
             $table->boolean('email_notifications')->default(true);
             $table->boolean('sms_notifications')->default(true);
             $table->boolean('whatsapp_notifications')->default(false);
-            
+
             // Consent management for PDPB compliance
             $table->boolean('marketing_consent')->default(false);
             $table->boolean('data_processing_consent')->default(false);
             $table->timestamp('consent_updated_at')->nullable();
-            
+
             // Status and timestamps
             $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
             $table->softDeletes();
             $table->timestamps();
-            
+
             // Indexes for better query performance
             $table->index(['first_name', 'last_name']);
             $table->index(['email']);

@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\SmsService;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\View\View;
 
 class OtpLoginController extends Controller
 {
@@ -26,17 +26,17 @@ class OtpLoginController extends Controller
         return view('auth.otp-login');
     }
 
-    public function sendOtp(Request $request): \Illuminate\Http\RedirectResponse
+    public function sendOtp(Request $request): RedirectResponse
     {
         $request->validate([
             'phone' => 'required|string|min:10',
         ]);
 
         $phone = preg_replace('/[^0-9]/', '', $request->phone);
-        
-        $user = User::where('phone', 'like', '%' . substr($phone, -10))->first();
 
-        if (!$user) {
+        $user = User::where('phone', 'like', '%'.substr($phone, -10))->first();
+
+        if (! $user) {
             return back()->with('error', 'No account found with this phone number.');
         }
 
@@ -46,16 +46,16 @@ class OtpLoginController extends Controller
             Session::put('otp_user_id', $user->id);
             Session::put('otp_phone', $phone);
             Session::put('otp_sent_at', now());
-            
+
             return redirect()->route('otp.verify')->with('info', 'OTP sent to your phone.');
         }
 
         return back()->with('error', 'Failed to send OTP. Please try again.');
     }
 
-    public function showVerifyForm(): \Illuminate\Http\Response
+    public function showVerifyForm(): Response
     {
-        if (!Session::has('otp_user_id')) {
+        if (! Session::has('otp_user_id')) {
             return redirect()->route('otp.login');
         }
 
@@ -71,17 +71,17 @@ class OtpLoginController extends Controller
         $userId = Session::get('otp_user_id');
         $phone = Session::get('otp_phone');
 
-        if (!$userId || !$phone) {
+        if (! $userId || ! $phone) {
             return redirect()->route('otp.login')->with('error', 'Session expired. Please try again.');
         }
 
         if ($this->smsService->verifyOtp($phone, $request->otp)) {
             $user = User::findOrFail($userId);
-            
+
             Auth::login($user);
             Session::forget(['otp_user_id', 'otp_phone', 'otp_sent_at']);
 
-            return redirect()->intended(route('dashboard'))->with('success', 'Login successful!');
+            return redirect()->intended('/')->with('success', 'Login successful!');
         }
 
         return back()->with('error', 'Invalid OTP. Please try again.');
@@ -91,7 +91,7 @@ class OtpLoginController extends Controller
     {
         $phone = Session::get('otp_phone');
 
-        if (!$phone) {
+        if (! $phone) {
             return redirect()->route('otp.login');
         }
 
@@ -99,6 +99,7 @@ class OtpLoginController extends Controller
 
         if ($result['success']) {
             Session::put('otp_sent_at', now());
+
             return back()->with('info', 'OTP resent to your phone.');
         }
 
@@ -109,6 +110,7 @@ class OtpLoginController extends Controller
     {
         Auth::logout();
         Session::flush();
+
         return redirect('/');
     }
 }
