@@ -27,7 +27,7 @@ return [
                  */
                 'include' => [
                     base_path(),
-                    // storage_path(),  // Include if you use zero downtime deployments and don't follow symlinks
+                    storage_path('app/public'),
                 ],
 
                 /*
@@ -39,6 +39,8 @@ return [
                     base_path('vendor'),
                     base_path('node_modules'),
                     storage_path('framework'),
+                    storage_path('logs'),
+                    storage_path('app/backup-temp'),
                 ],
 
                 /*

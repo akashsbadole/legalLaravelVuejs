@@ -151,7 +151,7 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
     Route::get('/invoices/{invoice}', function (Invoice $invoice) {
         return $invoice->load('client', 'items');
     });
-    Route::post('/invoices', function (Request $request) {
+    Route::post('/invoices', function (Request $request, \App\Services\NotificationService $notifications) {
         $data = $request->validate([
             'client_id' => 'required|exists:users,id',
             'total' => 'required|numeric|min:0',
@@ -168,7 +168,11 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
         $data['issue_date'] = $data['issue_date'] ?? now()->toDateString();
         $data['notes'] = $data['description'] ?? '';
 
-        return Invoice::create($data);
+        $invoice = Invoice::create($data);
+
+        $notifications->notifyInvoiceReceived($invoice->client_id, $invoice->toArray());
+
+        return $invoice;
     });
     Route::post('/invoices/{invoice}/payment', function (Invoice $invoice) {
         $invoice->update(['status' => 'paid', 'paid_date' => now()]);
@@ -206,7 +210,7 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
 
         return $query->latest()->get();
     });
-    Route::post('/tasks', function (Request $request) {
+    Route::post('/tasks', function (Request $request, \App\Services\NotificationService $notifications) {
         $data = $request->validate([
             'title' => 'required|string',
             'case_id' => 'nullable|exists:cases,id',
@@ -216,7 +220,13 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
         ]);
         $data['assigned_by'] = auth()->id();
 
-        return CaseTask::create($data);
+        $task = CaseTask::create($data);
+
+        if ($task->assigned_to) {
+            $notifications->notifyTaskAssigned($task->assigned_to, $task->toArray());
+        }
+
+        return $task;
     });
     Route::patch('/tasks/{task}', function (Request $request, CaseTask $task) {
         $task->update($request->all());
@@ -535,6 +545,10 @@ Route::middleware('throttle:5,1')->group(function () {
 });
 Route::post('/register', [AuthController::class, 'register']);
 
+// Public Invitation Routes
+Route::get('/invitations/{token}/verify', [\App\Http\Controllers\Api\InvitationController::class, 'verify']);
+Route::post('/invitations/{token}/accept', [\App\Http\Controllers\Api\InvitationController::class, 'accept']);
+
 // Session token route for web-to-API token bridging (outside tenant group)
 Route::middleware('web')->group(function () {
     Route::get('/session-token', function (Request $request) {
@@ -667,6 +681,10 @@ Route::middleware(['auth:sanctum', 'set.tenant'])->prefix('admin')->group(functi
     Route::get('/users', [AdminController::class, 'users']);
     Route::put('/users/{user}/toggle-status', [AdminController::class, 'toggleUserStatus']);
     Route::get('/audit-logs', [AdminController::class, 'auditLogs']);
+
+        // Invitations
+        Route::get('/invitations', [\App\Http\Controllers\Api\InvitationController::class, 'index']);
+        Route::post('/invitations', [\App\Http\Controllers\Api\InvitationController::class, 'invite']);
 });
 
 // Global Search API Routes

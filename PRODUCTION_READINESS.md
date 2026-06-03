@@ -151,3 +151,21 @@ php artisan queue:work --tries=3 --timeout=90
 **Status: ✅ READY FOR PRODUCTION**
 
 The system is now production-ready with enterprise-grade security, monitoring, and reliability features.
+
+## 🛡️ Data Security & Backups
+
+### Automated Backups
+The system is configured with `spatie/laravel-backup`.
+- **Database**: Full daily dumps of the primary database.
+- **Documents**: Backups of all files in `storage/app/public`.
+- **Retention**:
+  - All backups kept for 7 days.
+  - Daily backups kept for 16 days.
+  - Weekly backups kept for 8 weeks.
+- **Manual Backup**: Run `php artisan backup:run`
+- **Schedule**: It is recommended to add `php artisan backup:run` and `php artisan backup:clean` to your server's crontab (e.g., daily at 2 AM).
+
+### Security
+- **Encryption**: Backups can be encrypted by setting `BACKUP_ARCHIVE_PASSWORD` in `.env`.
+- **Audit Logs**: All sensitive actions (login, case changes, document access) are logged in the `audit_logs` table.
+- **Roles**: Access is strictly enforced via Role-Based Access Control (RBAC). Added `clerk` role for administrative staff with restricted permissions.

@@ -76,6 +76,11 @@ class RolePermissionSeeder extends Seeder
                 'is_default' => false,
             ],
             [
+                'name' => 'clerk',
+                'description' => 'Clerk for administrative support',
+                'is_default' => false,
+            ],
+            [
                 'name' => 'client',
                 'description' => 'Client with portal access',
                 'is_default' => true,
@@ -115,6 +120,18 @@ class RolePermissionSeeder extends Seeder
                     ];
                     $role->permissions()->attach(
                         Permission::whereIn('name', $paralegalPermissions)->get()
+                    );
+                    break;
+
+                case 'clerk':
+                    $clerkPermissions = [
+                        'view_cases',
+                        'view_clients',
+                        'view_documents', 'upload_documents',
+                        'view_tasks',
+                    ];
+                    $role->permissions()->attach(
+                        Permission::whereIn('name', $clerkPermissions)->get()
                     );
                     break;
 
