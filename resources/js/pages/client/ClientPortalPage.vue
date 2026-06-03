@@ -13,7 +13,7 @@
 
             <div v-else>
                 <!-- Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                     <p class="text-sm text-gray-500 dark:text-gray-400">Active Cases</p>
                     <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.activeCases }}</p>
@@ -108,6 +108,7 @@
                     </div>
                 </div>
             </div>
+          </div>
         </div>
     </AppLayout>
 </template>
@@ -169,5 +170,4 @@ function getStatusClass(status) {
         completed: 'bg-gray-100 text-gray-800'
     }[statusLower] || 'bg-gray-100 text-gray-800';
 }
-</script>
 </script>

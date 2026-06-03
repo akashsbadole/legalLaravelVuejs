@@ -121,6 +121,14 @@
                                 <textarea v-model="form.description" rows="3" 
                                           class="mt-1 block w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
                             </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client *</label>
+                                <select v-model="form.client_id" required
+                                        class="mt-1 block w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">Select Client</option>
+                                    <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.name }}</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="flex justify-end space-x-3 mt-6">
                             <button type="button" @click="closeModal" class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
@@ -140,6 +148,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 
 const { setSeo } = useSeo();
 const cases = ref([]);
+const clients = ref([]);
 const loading = ref(true);
 const showModal = ref(false);
 const editingCase = ref(null);
@@ -193,12 +202,14 @@ onMounted(async () => {
 async function fetchData() {
     loading.value = true;
     try {
-        const [casesRes, statusesRes] = await Promise.all([
+        const [casesRes, statusesRes, clientsRes] = await Promise.all([
             axios.get('/cases'),
-            axios.get('/case-statuses')
+            axios.get('/case-statuses'),
+            axios.get('/clients/all')
         ]);
         cases.value = casesRes.data.data || [];
         statuses.value = statusesRes.data || [];
+        clients.value = clientsRes.data.data || clientsRes.data || [];
         if (statuses.value.length && !form.value.status_id) {
             form.value.status_id = statuses.value[0].id;
         }
@@ -221,7 +232,8 @@ function editCase(caseItem) {
         title: caseItem.title,
         case_type: caseItem.case_type,
         status_id: caseItem.status_id,
-        description: caseItem.description
+        description: caseItem.description,
+        client_id: caseItem.client_id
     };
     showModal.value = true;
 }
@@ -229,9 +241,15 @@ function editCase(caseItem) {
 async function saveCase() {
     try {
         if (editingCase.value) {
-            await axios.put(`/cases/${editingCase.value.id}`, form.value);
+            await axios.put(`/cases/${editingCase.value.id}`, {
+                ...form.value,
+                client_id: form.value.client_id || 1 // Fallback or ensure selected
+            });
         } else {
-            await axios.post('/cases', form.value);
+            await axios.post('/cases', {
+                ...form.value,
+                client_id: form.value.client_id || 1 // Fallback
+            });
         }
         closeModal();
         await fetchData();
