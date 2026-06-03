@@ -91,9 +91,16 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
         return CaseStatus::all();
     });
 
+    Route::get('/case-types', function () {
+        return response()->json([
+            'types' => ['Civil', 'Criminal', 'Family', 'Corporate', 'Intellectual Property', 'Real Estate', 'Immigration', 'Other']
+        ]);
+    });
+
     // Cases CRUD
     Route::get('/cases', [CaseController::class, 'index']);
     Route::get('/cases/{case}', [CaseController::class, 'show']);
+    Route::get('/cases/{case}/ai-analysis', [CaseController::class, 'aiAnalysis']);
     Route::post('/cases', [CaseController::class, 'store']);
     Route::put('/cases/{case}', [CaseController::class, 'update']);
     Route::delete('/cases/{case}', [CaseController::class, 'destroy']);
@@ -251,6 +258,10 @@ Route::prefix('tenant/{tenant}')->middleware(['auth:sanctum', 'audit', 'set.tena
     });
 
     // Documents - using Document model
+    Route::get('/document-templates', function () {
+        return \App\Models\DocumentTemplate::where('is_active', true)->get();
+    });
+    Route::post('/documents/ai-generate', [CaseController::class, 'aiGenerateDocument']);
     Route::get('/documents', function (Request $request) {
         $query = Document::with(['category', 'createdBy', 'case']);
 

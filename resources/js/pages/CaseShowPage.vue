@@ -14,7 +14,7 @@
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ caseItem.title }}</h1>
                     <p class="text-gray-600 dark:text-gray-400">{{ caseItem.case_number }}</p>
                 </div>
-                <span :class="getStatusClass(caseItem.status)" class="px-3 py-1 text-sm rounded-full">{{ caseItem.status }}</span>
+                <span :class="getStatusClass(caseItem.status)" class="px-3 py-1 text-sm rounded-full">{{ caseItem.status?.name || caseItem.status }}</span>
             </div>
         </div>
 
@@ -25,7 +25,7 @@
                         <button v-for="tab in tabs" :key="tab.id"
                             @click="activeTab = tab.id"
                             :class="activeTab === tab.id 
-                                ? 'border-primary-500 text-primary-600' 
+                                ? 'border-blue-500 text-blue-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="px-6 py-3 text-sm font-medium border-b-2">
                             {{ tab.label }}
@@ -49,7 +49,7 @@
                                     </div>
                                     <div class="flex">
                                         <dt class="w-32 text-gray-500 dark:text-gray-400">Status:</dt>
-                                        <dd class="text-gray-900 dark:text-white">{{ caseItem.status }}</dd>
+                                        <dd class="text-gray-900 dark:text-white">{{ caseItem.status?.name || caseItem.status }}</dd>
                                     </div>
                                     <div class="flex">
                                         <dt class="w-32 text-gray-500 dark:text-gray-400">Opened:</dt>
@@ -57,7 +57,7 @@
                                     </div>
                                     <div class="flex">
                                         <dt class="w-32 text-gray-500 dark:text-gray-400">Closed:</dt>
-                                        <dd class="text-gray-900 dark:text-white">{{ formatDate(caseItem.close_date) || 'Ongoing' }}</dd>
+                                        <dd class="text-gray-900 dark:text-white">{{ formatDate(caseItem.actual_close_date) || 'Ongoing' }}</dd>
                                     </div>
                                 </dl>
                             </div>
@@ -68,10 +68,64 @@
                         </div>
                     </div>
 
+                    <div v-if="activeTab === 'ai-analysis'">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">AI Case Analysis</h3>
+                            <button @click="getAIAnalysis" :disabled="analyzing"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 flex items-center">
+                                <svg v-if="analyzing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                {{ aiAnalysis ? 'Refresh Analysis' : 'Generate Analysis' }}
+                            </button>
+                        </div>
+
+                        <div v-if="aiAnalysis" class="space-y-6">
+                            <!-- Winning Arguments -->
+                            <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-100 dark:border-green-800">
+                                <h4 class="text-md font-bold text-green-800 dark:text-green-300 mb-2">Winning Arguments & Strategy</h4>
+                                <div class="prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-200" v-html="formatAIContent(aiAnalysis.analysis.analysis || aiAnalysis.analysis.detailed_analysis || aiAnalysis.analysis.insights[0])"></div>
+                            </div>
+
+                            <!-- Citations & Precedents -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
+                                    <h4 class="text-md font-bold text-blue-800 dark:text-blue-300 mb-2">Key Precedents</h4>
+                                    <ul class="list-disc list-inside text-sm text-blue-900 dark:text-blue-200 space-y-1">
+                                        <li v-for="(p, i) in aiAnalysis.precedents?.precedents" :key="i">{{ p }}</li>
+                                        <li v-if="!aiAnalysis.precedents?.precedents?.length">No specific precedents identified.</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800">
+                                    <h4 class="text-md font-bold text-purple-800 dark:text-purple-300 mb-2">Legal Principles</h4>
+                                    <ul class="list-disc list-inside text-sm text-purple-900 dark:text-purple-200 space-y-1">
+                                        <li v-for="(p, i) in aiAnalysis.precedents?.principles" :key="i">{{ p }}</li>
+                                        <li v-if="!aiAnalysis.precedents?.principles?.length">No specific principles identified.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else-if="!analyzing" class="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                            <p class="mt-2 text-gray-500">Click the button above to generate AI-powered legal citations and winning arguments for this case.</p>
+                        </div>
+                        <div v-else class="text-center py-12">
+                            <div class="animate-pulse flex flex-col items-center">
+                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-4"></div>
+                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-4"></div>
+                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-56"></div>
+                            </div>
+                            <p class="mt-4 text-gray-500">AI is analyzing the case details...</p>
+                        </div>
+                    </div>
+
                     <div v-if="activeTab === 'tasks'">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Case Tasks</h3>
-                            <button @click="showTaskModal = true" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm">
+                            <button @click="showTaskModal = true" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
                                 Add Task
                             </button>
                         </div>
@@ -111,12 +165,12 @@
                         <div v-else class="space-y-4">
                             <div v-for="event in timeline" :key="event.id" class="flex">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-3 h-3 rounded-full bg-primary-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-blue-500"></div>
                                     <div class="w-0.5 h-full bg-gray-200 dark:bg-gray-700"></div>
                                 </div>
                                 <div class="ml-4 pb-4">
-                                    <p class="text-gray-900 dark:text-white font-medium">{{ event.description }}</p>
-                                    <p class="text-sm text-gray-500">{{ formatDateTime(event.created_at) }}</p>
+                                    <p class="text-gray-900 dark:text-white font-medium">{{ event.description || event.title }}</p>
+                                    <p class="text-sm text-gray-500">{{ formatDateTime(event.created_at || event.event_date) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -124,16 +178,25 @@
 
                     <div v-if="activeTab === 'team'">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Team Members</h3>
-                        <div v-if="caseItem.attorney" class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-3">
+                        <div v-if="caseItem.assigned_attorney" class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-3">
                             <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-                                {{ caseItem.attorney.name?.charAt(0) }}
+                                {{ caseItem.assigned_attorney.name?.charAt(0) }}
                             </div>
                             <div class="ml-3">
-                                <p class="font-medium text-gray-900 dark:text-white">{{ caseItem.attorney.name }}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">{{ caseItem.assigned_attorney.name }}</p>
                                 <p class="text-sm text-gray-500">Assigned Attorney</p>
                             </div>
                         </div>
-                        <p v-else class="text-gray-500">No attorney assigned.</p>
+                        <div v-if="caseItem.client" class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-3">
+                            <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-medium">
+                                {{ caseItem.client.name?.charAt(0) }}
+                            </div>
+                            <div class="ml-3">
+                                <p class="font-medium text-gray-900 dark:text-white">{{ caseItem.client.name }}</p>
+                                <p class="text-sm text-gray-500">Client</p>
+                            </div>
+                        </div>
+                        <p v-if="!caseItem.assigned_attorney && !caseItem.client" class="text-gray-500">No team members assigned.</p>
                     </div>
                 </div>
             </div>
@@ -146,7 +209,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
                         <input v-model="newTask.title" type="text" required
-                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -169,7 +232,7 @@
                         <button type="button" @click="showTaskModal = false"
                             class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Cancel</button>
                         <button type="submit"
-                            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">Add Task</button>
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add Task</button>
                     </div>
                 </form>
             </div>
@@ -190,9 +253,12 @@ const activeTab = ref('details');
 const caseTasks = ref([]);
 const timeline = ref([]);
 const showTaskModal = ref(false);
+const aiAnalysis = ref(null);
+const analyzing = ref(false);
 
 const tabs = [
     { id: 'details', label: 'Details' },
+    { id: 'ai-analysis', label: 'AI Insights' },
     { id: 'tasks', label: 'Tasks' },
     { id: 'timeline', label: 'Timeline' },
     { id: 'team', label: 'Team' }
@@ -206,15 +272,15 @@ const newTask = ref({
 
 onMounted(async () => {
     try {
-        const response = await axios.get(`cases/${route.params.id}`);
+        const response = await axios.get(`/cases/${route.params.id}`);
         caseItem.value = response.data;
         
-        const tasksRes = await axios.get(`tasks?case_id=${route.params.id}`);
+        const tasksRes = await axios.get(`/tasks?case_id=${route.params.id}`);
         caseTasks.value = tasksRes.data;
         
         try {
-            const timelineRes = await axios.get(`/api/cases/${route.params.id}/timeline`);
-            timeline.value = timelineRes.data.timeline || [];
+            const timelineRes = await axios.get(`/cases/${route.params.id}/timeline`);
+            timeline.value = timelineRes.data.data || timelineRes.data.timeline || [];
         } catch (e) {
             timeline.value = [
                 { id: 1, description: `Case "${caseItem.value.title}" created`, created_at: caseItem.value.created_at },
@@ -228,9 +294,30 @@ onMounted(async () => {
     }
 });
 
+async function getAIAnalysis() {
+    analyzing.value = true;
+    try {
+        const response = await axios.get(`/cases/${route.params.id}/ai-analysis`);
+        aiAnalysis.value = response.data;
+    } catch (error) {
+        console.error('Error getting AI analysis:', error);
+        alert('Failed to generate AI analysis. Please try again.');
+    } finally {
+        analyzing.value = false;
+    }
+}
+
+function formatAIContent(content) {
+    if (!content) return '';
+    if (typeof content === 'string') {
+        return content.replace(/\n/g, '<br>');
+    }
+    return JSON.stringify(content, null, 2).replace(/\n/g, '<br>');
+}
+
 async function addTask() {
     try {
-        const response = await axios.post('tasks', {
+        const response = await axios.post('/tasks', {
             ...newTask.value,
             case_id: route.params.id
         });
@@ -244,7 +331,7 @@ async function addTask() {
 
 async function toggleTask(task) {
     try {
-        await axios.patch(`tasks/${task.id}`, {
+        await axios.patch(`/tasks/${task.id}`, {
             completed_at: task.completed_at ? null : new Date().toISOString()
         });
         task.completed_at = task.completed_at ? null : new Date().toISOString();
@@ -262,13 +349,17 @@ function formatDateTime(date) {
 }
 
 function getStatusClass(status) {
+    const statusName = typeof status === 'object' ? status?.name : status;
     const map = {
         'active': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+        'Open': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
         'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+        'Pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
         'closed': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+        'Closed': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
         'on_hold': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
     };
-    return map[status] || 'bg-gray-100 text-gray-800';
+    return map[statusName] || 'bg-gray-100 text-gray-800';
 }
 
 function getPriorityClass(priority) {

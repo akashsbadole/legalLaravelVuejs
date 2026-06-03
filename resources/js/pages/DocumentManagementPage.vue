@@ -30,15 +30,15 @@
           <div class="flex items-center justify-between mb-4">
             <div class="p-3 bg-white/20 rounded-lg">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <span class="text-2xl font-bold">New</span>
+              <span class="text-2xl font-bold">AI</span>
           </div>
-          <h3 class="text-lg font-semibold mb-2">Create Document</h3>
-          <p class="text-blue-100 text-sm mb-4">Start with AI-powered templates</p>
-          <button class="w-full bg-white text-blue-600 py-2 px-4 rounded-lg font-medium hover:bg-blue-50 transition-colors">
-            Create New
+            <h3 class="text-lg font-semibold mb-2">AI Generate Document</h3>
+            <p class="text-blue-100 text-sm mb-4">Create legal documents instantly with AI</p>
+            <button @click="showAIModal = true" class="w-full bg-white text-blue-600 py-2 px-4 rounded-lg font-medium hover:bg-blue-50 transition-colors">
+              Generate with AI
           </button>
         </div>
 
@@ -175,6 +175,59 @@
         </div>
       </div>
     </div>
+
+    <!-- AI Generation Modal -->
+    <div v-if="showAIModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="showAIModal = false">
+      <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 z-10">
+          <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
+            <svg class="w-6 h-6 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            AI Document Generation
+          </h2>
+          <form @submit.prevent="generateAIDocument">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Case</label>
+                <select v-model="aiForm.case_id" required class="mt-1 block w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <option value="">Select a case</option>
+                  <option v-for="c in cases" :key="c.id" :value="c.id">{{ c.case_number }} - {{ c.title }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document Type</label>
+                <select v-model="aiForm.document_type" required class="mt-1 block w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <option value="Affidavit">Affidavit</option>
+                  <option value="Legal Notice">Legal Notice</option>
+                  <option value="Power of Attorney">Power of Attorney</option>
+                  <option value="Sale Deed">Sale Deed</option>
+                  <option value="Lease Agreement">Lease Agreement</option>
+                  <option value="Partnership Deed">Partnership Deed</option>
+                  <option value="Petition">Petition</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Additional Instructions (Optional)</label>
+                <textarea v-model="aiForm.additional_instructions" rows="3" placeholder="e.g. Include specific details about property, or special clauses..."
+                  class="mt-1 block w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+              </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+              <button type="button" @click="showAIModal = false" class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+              <button type="submit" :disabled="generating" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 flex items-center">
+                <svg v-if="generating" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generate with AI
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </AppLayout>
 </template>
 
@@ -190,7 +243,25 @@ const documentStore = useDocumentStore()
 const isDarkMode = ref(false)
 const templateSearch = ref('')
 const selectedCategory = ref('')
-onMounted(() => { loadTemplates(); loadRecentDocuments(); });
+const showAIModal = ref(false)
+const generating = ref(false)
+const cases = ref([])
+const aiForm = ref({
+  case_id: '',
+  document_type: 'Affidavit',
+  additional_instructions: ''
+})
+
+onMounted(async () => {
+  loadTemplates();
+  loadRecentDocuments();
+  try {
+    const response = await axios.get('/cases');
+    cases.value = response.data.data || [];
+  } catch (error) {
+    console.error('Failed to load cases:', error);
+  }
+});
 
 const aiStats = ref({
   requests_today: 0,
@@ -345,6 +416,22 @@ const toggleDarkMode = () => {
   isDarkMode.value = !isDarkMode.value
   // In a real app, you'd persist this preference
   document.documentElement.classList.toggle('dark', isDarkMode.value)
+}
+
+const generateAIDocument = async () => {
+  generating.value = true
+  try {
+    const response = await axios.post('/documents/ai-generate', aiForm.value)
+    showAIModal.value = false
+    aiForm.value = { case_id: '', document_type: 'Affidavit', additional_instructions: '' }
+    await loadRecentDocuments()
+    alert('Document generated successfully!')
+  } catch (error) {
+    console.error('Error generating document:', error)
+    alert('Failed to generate document with AI')
+  } finally {
+    generating.value = false
+  }
 }
 
 const selectTemplate = (template) => {
