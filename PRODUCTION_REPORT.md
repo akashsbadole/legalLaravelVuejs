@@ -9,15 +9,15 @@ The LegalFirm CRM is currently **Ready for Production** for small to medium-size
 
 | Feature | LegalFirm CRM (Current) | Clio / MyCase | Gap Analysis |
 |---------|-------------------------|---------------|--------------|
-| **Case Management** | ✅ Full CRUD, Timeline, Notes | ✅ Full CRUD, Advanced Custom Fields | **Minimal**: LegalFirm covers 90% of core needs. |
-| **Client Portal** | ⚠️ View-only (Cases, Docs, Invoices) | ✅ Messaging, Payments, Appointments | **Moderate**: Missing secure messaging and online payment. |
-| **Billing & Invoicing**| ✅ Manual Invoicing, GST support | ✅ Automated, Online Payments | **Moderate**: LegalFirm requires manual payment entry. |
-| **Document Management**| ✅ Storage, Templates, AI Generation | ✅ Storage, E-Sign, Versioning | **Moderate**: E-Signature is the main missing piece. |
-| **Role-Based Access** | ✅ Admin, Attorney, Paralegal, Clerk | ✅ Granular Permissions | **Minimal**: New Clerk role added; covers team needs. |
-| **Team Onboarding** | ✅ Email Invitations (New!) | ✅ User Invitations | **None**: Feature parity reached for onboarding. |
-| **Notifications** | ✅ In-app + Email (New!) | ✅ Multi-channel Notifications | **Minimal**: Email support added for core triggers. |
-| **AI Features** | ✅ Legal Search, Case Analysis | ⚠️ Limited / Beta | **LegalFirm Lead**: AI features are more integrated. |
-| **Trust Accounting** | ✅ Management & Reporting | ✅ Full Compliance Tracking | **Minimal**: Basic trust accounting is implemented. |
+| **Case Management** | ✅ Full CRUD, Timeline, Notes | ✅ Full CRUD, Advanced Custom Fields | **Minimal**: Core needs fully covered. |
+| **Client Portal** | ✅ Secure Messaging & Payments | ✅ Messaging, Payments, Appointments | **Minimal**: Full parity for messaging and payments. |
+| **Billing & Invoicing**| ✅ GST support, Online Payments | ✅ Automated, Online Payments | **None**: Integrated Stripe for client payments. |
+| **Document Management**| ✅ Templates, AI Gen, E-Sign | ✅ Storage, E-Sign, Versioning | **None**: Added E-Signature workflow. |
+| **Role-Based Access** | ✅ Admin, Attorney, Paralegal, Clerk | ✅ Granular Permissions | **Minimal**: New Clerk role added. |
+| **Team Onboarding** | ✅ Email Invitations | ✅ User Invitations | **None**: Feature parity for onboarding. |
+| **Notifications** | ✅ In-app + Email | ✅ Multi-channel Notifications | **None**: Email alerts added for all core events. |
+| **AI Features** | ✅ Legal Search, Case Analysis | ⚠️ Limited / Beta | **LegalFirm Lead**: AI features are superior. |
+| **Trust Accounting** | ✅ Management & Reporting | ✅ Full Compliance Tracking | **Minimal**: Basic trust accounting implemented. |
 | **Mobile App** | ❌ Responsive Web Only | ✅ Native iOS/Android Apps | **Moderate**: Future roadmap item. |
 
 ---

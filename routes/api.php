@@ -673,6 +673,14 @@ Route::middleware(['auth:sanctum', 'set.tenant'])->prefix('portal')->group(funct
     Route::get('/cases', [ClientPortalController::class, 'cases']);
     Route::get('/invoices', [ClientPortalController::class, 'invoices']);
     Route::get('/documents', [ClientPortalController::class, 'documents']);
+
+        // Payments
+        Route::post('/invoices/{invoice}/pay', [\App\Http\Controllers\Api\PaymentController::class, 'createCheckoutSession']);
+
+        // Secure Messaging
+        Route::get('/messages', [\App\Http\Controllers\Api\MessageController::class, 'index']);
+        Route::post('/messages', [\App\Http\Controllers\Api\MessageController::class, 'store']);
+        Route::get('/messages/conversation/{user}', [\App\Http\Controllers\Api\MessageController::class, 'getConversation']);
 });
 
 // Admin API Routes
@@ -685,6 +693,11 @@ Route::middleware(['auth:sanctum', 'set.tenant'])->prefix('admin')->group(functi
         // Invitations
         Route::get('/invitations', [\App\Http\Controllers\Api\InvitationController::class, 'index']);
         Route::post('/invitations', [\App\Http\Controllers\Api\InvitationController::class, 'invite']);
+
+        // E-Signatures
+        Route::get('/signatures', [\App\Http\Controllers\Api\SignatureController::class, 'index']);
+        Route::post('/signatures', [\App\Http\Controllers\Api\SignatureController::class, 'store']);
+        Route::post('/signatures/{signatureRequest}/sign', [\App\Http\Controllers\Api\SignatureController::class, 'sign']);
 });
 
 // Global Search API Routes
@@ -735,6 +748,7 @@ Route::middleware('auth:sanctum')->prefix('tenants')->group(function () {
 Route::middleware('rate-limit-webhooks')->group(function () {
     Route::post('/webhooks/twilio/whatsapp', [TwilioWebhookController::class, 'handleWhatsApp']);
     Route::post('/webhooks/twilio/sms', [TwilioWebhookController::class, 'handleSms']);
+    Route::post('/webhooks/stripe', [\App\Http\Controllers\Api\PaymentController::class, 'handleWebhook']);
 });
 
 // Health check endpoints (public)

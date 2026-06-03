@@ -48,4 +48,10 @@ return [
         'whatsapp_number' => env('TWILIO_WHATSAPP_NUMBER'),
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
 ];
