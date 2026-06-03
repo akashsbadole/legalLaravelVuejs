@@ -57,6 +57,19 @@ A comprehensive legal practice management system built with Laravel, featuring c
 
 For detailed production deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
+### Connecting AWS S3 (Production)
+
+To use AWS S3 for secure document storage, update your `.env` file with your credentials:
+
+```bash
+FILESYSTEM_DISK=s3
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_DEFAULT_REGION=your_region
+AWS_BUCKET=your_bucket_name
+AWS_URL=https://your_bucket_name.s3.your_region.amazonaws.com
+```
+
 #### Quick Docker Deployment
 
 ```bash
@@ -81,7 +94,7 @@ See `.env.example` for all required environment variables. Key configurations:
 
 - **Database**: MySQL/PostgreSQL with Redis for caching
 - **Mail**: Mailgun/SMTP for email delivery
-- **Storage**: AWS S3 for file storage
+- **Storage**: AWS S3 for file storage (Recommended for Production)
 - **SMS**: Msg91/Twilio for SMS notifications
 - **Security**: Force HTTPS, security headers
 

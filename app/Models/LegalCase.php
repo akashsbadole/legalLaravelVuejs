@@ -24,6 +24,9 @@ class LegalCase extends Model
     protected function casts(): array
     {
         return [
+            'title' => 'encrypted',
+            'description' => 'encrypted',
+            'notes' => 'encrypted',
             'open_date' => 'date',
             'expected_close_date' => 'date',
             'actual_close_date' => 'date',

@@ -41,7 +41,7 @@ To close the gap with competitors, the following should be prioritized:
 ## 🔒 Security Posture
 - **Encryption**: Support for encrypted backups and file storage (S3).
 - **2FA**: Two-Factor Authentication available for all staff roles.
-- **Audit Trails**: Full transparency on who did what and when.
+- **Audit Trails**: Full transparency on who did what and when. All state-changing actions (CRUD operations on cases, clients, invoices, documents, etc.) are automatically logged with user ID, IP address, and timestamp.
 - **Data Sovereignty**: Since you control the hosting, you have full ownership of your data compared to SaaS competitors.
 
 **Conclusion**: You can safely proceed with production for your team. The system is stable, secures your data, and automates the most time-consuming parts of case management.

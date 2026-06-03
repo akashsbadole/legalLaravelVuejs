@@ -166,6 +166,7 @@ The system is configured with `spatie/laravel-backup`.
 - **Schedule**: It is recommended to add `php artisan backup:run` and `php artisan backup:clean` to your server's crontab (e.g., daily at 2 AM).
 
 ### Security
-- **Encryption**: Backups can be encrypted by setting `BACKUP_ARCHIVE_PASSWORD` in `.env`.
+- **Encryption**: Backups can be encrypted by setting `BACKUP_ARCHIVE_PASSWORD` in `.env`. Sensitive model fields (PII, case notes) are automatically encrypted at rest using Laravel's field-level encryption.
 - **Audit Logs**: All sensitive actions (login, case changes, document access) are logged in the `audit_logs` table.
 - **Roles**: Access is strictly enforced via Role-Based Access Control (RBAC). Added `clerk` role for administrative staff with restricted permissions.
+- **S3 Storage**: Production documents should be stored on AWS S3 for durability and scalability. Set `FILESYSTEM_DISK=s3` and provide AWS credentials in `.env`.

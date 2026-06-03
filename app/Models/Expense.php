@@ -12,6 +12,7 @@ class Expense extends Model
     protected function casts(): array
     {
         return [
+            'description' => 'encrypted',
             'amount' => 'decimal:2',
             'is_billable' => 'boolean',
             'expense_date' => 'date',
