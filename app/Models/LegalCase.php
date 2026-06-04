@@ -18,17 +18,22 @@ class LegalCase extends Model
         'assigned_attorney_id', 'client_id', 'open_date', 'expected_close_date',
         'actual_close_date', 'estimated_value', 'notes', 'hourly_rate',
         'assigned_staff', 'assignment_changed_at', 'assignment_changed_by',
+        'encrypted_data',
     ];
 
     protected function casts(): array
     {
         return [
+            'title' => 'encrypted',
+            'description' => 'encrypted',
+            'notes' => 'encrypted',
             'open_date' => 'date',
             'expected_close_date' => 'date',
             'actual_close_date' => 'date',
             'estimated_value' => 'decimal:2',
             'assigned_staff' => 'array',
             'assignment_changed_at' => 'datetime',
+            'encrypted_data' => 'encrypted:json',
         ];
     }
 

@@ -19,6 +19,11 @@ class Lead extends Model
     protected function casts(): array
     {
         return [
+            'name' => 'encrypted',
+            'email' => 'encrypted',
+            'phone' => 'encrypted',
+            'company' => 'encrypted',
+            'description' => 'encrypted',
             'estimated_value' => 'decimal:2',
             'next_follow_up' => 'date',
         ];

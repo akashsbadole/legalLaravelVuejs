@@ -21,6 +21,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'phone' => 'encrypted',
+            'address' => 'encrypted',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
@@ -113,6 +115,11 @@ class User extends Authenticatable
     public function isParalegal(): bool
     {
         return $this->role === 'paralegal';
+    }
+
+    public function isClerk(): bool
+    {
+        return $this->role === 'clerk';
     }
 
     public function isBillingManager(): bool

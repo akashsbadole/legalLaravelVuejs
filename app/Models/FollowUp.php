@@ -15,6 +15,9 @@ class FollowUp extends Model
     protected function casts(): array
     {
         return [
+            'subject' => 'encrypted',
+            'message' => 'encrypted',
+            'notes' => 'encrypted',
             'scheduled_at' => 'datetime',
             'sent_at' => 'datetime',
         ];

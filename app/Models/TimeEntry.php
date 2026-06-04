@@ -12,6 +12,7 @@ class TimeEntry extends Model
     protected function casts(): array
     {
         return [
+            'description' => 'encrypted',
             'hours' => 'decimal:2',
             'rate' => 'decimal:2',
             'approved_at' => 'datetime',

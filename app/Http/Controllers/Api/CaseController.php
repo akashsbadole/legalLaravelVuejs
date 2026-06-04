@@ -7,6 +7,7 @@ use App\Models\CaseStatus;
 use App\Models\Document;
 use App\Models\LegalCase;
 use App\Services\AI\AIServiceManager;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -30,7 +31,7 @@ class CaseController extends Controller
         return response()->json($cases);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, NotificationService $notifications): JsonResponse
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -50,6 +51,10 @@ class CaseController extends Controller
         $validated['assigned_attorney_id'] = $validated['assigned_attorney_id'] ?? auth()->id();
 
         $case = LegalCase::create($validated);
+
+        if ($case->assigned_attorney_id) {
+            $notifications->notifyNewCase($case->assigned_attorney_id, $case->toArray());
+        }
 
         return response()->json(['data' => $case->load(['status', 'assignedAttorney', 'client']), 'message' => 'Case created'], 201);
     }

@@ -16,6 +16,10 @@ class InteractionLog extends Model
     protected function casts(): array
     {
         return [
+            'subject' => 'encrypted',
+            'body' => 'encrypted',
+            'notes' => 'encrypted',
+            'call_notes' => 'encrypted',
             'recipients' => 'array',
             'sent_at' => 'datetime',
         ];

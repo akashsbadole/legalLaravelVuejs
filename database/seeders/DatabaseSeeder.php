@@ -55,6 +55,17 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $clerk = User::updateOrCreate(
+            ['email' => 'clerk@legalfirm.com'],
+            [
+                'name' => 'Support Clerk',
+                'password' => bcrypt('password'),
+                'role' => 'clerk',
+                'hourly_rate' => 40,
+                'email_verified_at' => now(),
+            ]
+        );
+
         $client = User::updateOrCreate(
             ['email' => 'client@example.com'],
             [

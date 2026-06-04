@@ -9,6 +9,11 @@ class CaseNote extends Model
 {
     protected $fillable = ['case_id', 'user_id', 'content', 'is_internal'];
 
+    protected $casts = [
+        'content' => 'encrypted',
+        'is_internal' => 'boolean',
+    ];
+
     public function case(): BelongsTo
     {
         return $this->belongsTo(LegalCase::class, 'case_id');
